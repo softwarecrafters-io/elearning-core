@@ -13,4 +13,8 @@ export class UserRole {
     }
     return new UserRole(value as UserRoleValue);
   }
+
+  equals(other: UserRole): boolean {
+    return this.value === other.value;
+  }
 }

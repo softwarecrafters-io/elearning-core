@@ -26,4 +26,11 @@ describe('The UserRole', () => {
   it('rejects invalid role value', () => {
     expect(() => UserRole.create('superadmin')).toThrow('Invalid role');
   });
+
+  it('equals returns true for same role', () => {
+    const role1 = UserRole.create('admin');
+    const role2 = UserRole.create('admin');
+
+    expect(role1.equals(role2)).toBe(true);
+  });
 });
