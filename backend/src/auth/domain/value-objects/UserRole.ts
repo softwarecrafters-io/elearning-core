@@ -17,4 +17,12 @@ export class UserRole {
   equals(other: UserRole): boolean {
     return this.value === other.value;
   }
+
+  isAdmin(): boolean {
+    return this.value === 'admin';
+  }
+
+  isStudent(): boolean {
+    return this.value === 'student';
+  }
 }

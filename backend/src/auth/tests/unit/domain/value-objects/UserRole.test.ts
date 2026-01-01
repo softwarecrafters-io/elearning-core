@@ -33,4 +33,35 @@ describe('The UserRole', () => {
 
     expect(role1.equals(role2)).toBe(true);
   });
+
+  it('equals returns false for different roles', () => {
+    const admin = UserRole.create('admin');
+    const student = UserRole.create('student');
+
+    expect(admin.equals(student)).toBe(false);
+  });
+
+  it('isAdmin returns true for admin', () => {
+    const role = UserRole.create('admin');
+
+    expect(role.isAdmin()).toBe(true);
+  });
+
+  it('isAdmin returns false for student', () => {
+    const role = UserRole.create('student');
+
+    expect(role.isAdmin()).toBe(false);
+  });
+
+  it('isStudent returns true for student', () => {
+    const role = UserRole.create('student');
+
+    expect(role.isStudent()).toBe(true);
+  });
+
+  it('isStudent returns false for admin', () => {
+    const role = UserRole.create('admin');
+
+    expect(role.isStudent()).toBe(false);
+  });
 });
