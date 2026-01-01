@@ -1,9 +1,9 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Routes as RouterRoutes, Route, useNavigate } from 'react-router-dom';
-import { HealthPage } from '../../../../health/infrastructure/ui/Health/health.page';
-import { LoginPage } from '../../../../auth/infrastructure/ui/Login/login.page';
+import { HealthPage } from '../../../../health/infrastructure/ui/Health/Health.page';
+import { LoginPage } from '../../../../auth/infrastructure/ui/Login/Login.page';
 import { VerifyOTPPage } from '../../../../auth/infrastructure/ui/VerifyOTP/VerifyOTP.page';
-import { ProfilePage } from '../../../../auth/infrastructure/ui/Profile/profile.page';
+import { ProfilePage } from '../../../../auth/infrastructure/ui/Profile/Profile.page';
 import { ProtectedRoute } from '../ProtectedRoute/ProtectedRoute';
 import { HomePage } from '../Home/Home.page';
 import { ThemeToggle } from '../ThemeToggle/ThemeToggle';
