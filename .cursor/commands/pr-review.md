@@ -36,3 +36,24 @@ If a PR number is provided (`pr-review #123`), use that number directly.
 
 If Tech Lead mentions a specific file, line, or concern, focus on that area first while still reviewing all comments.
 
+## If PR is already merged
+
+If `gh pr list --head <branch>` returns empty (PR already merged):
+
+1. **Switch to master**:
+   ```bash
+   git checkout master
+   ```
+
+2. **Pull latest changes**:
+   ```bash
+   git pull origin master
+   ```
+
+3. **Delete merged branch**:
+   ```bash
+   git branch -d <branch>
+   ```
+
+4. **Inform Tech Lead**: "PR merged, synced with master, ready for next task"
+
