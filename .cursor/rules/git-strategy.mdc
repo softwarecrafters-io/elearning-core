@@ -66,6 +66,38 @@ gh api repos/{owner}/{repo}/pulls/<number>/comments
 
 ## Commands
 
+### `create-pr`
+
+When the Tech Lead writes `create-pr`, I must:
+
+1. **Verify branch** is not `master`:
+   ```bash
+   git branch --show-current
+   ```
+
+2. **Push branch** to origin (hooks will validate):
+   ```bash
+   git push -u origin <branch>
+   ```
+
+3. **Determine PR type** from branch name:
+   - `feat/...` → title prefix `feat:`
+   - `fix/...` → title prefix `fix:`
+   - `refactor/...` → title prefix `refactor:`
+   - `docs/...` → title prefix `docs:`
+   - `chore/...` → title prefix `chore:`
+
+4. **Create PR** with reviewer:
+   ```bash
+   gh pr create --base master --title "<type>: <description>" --body "<detailed description>" --reviewer softwarecrafters-io
+   ```
+
+5. **Report PR URL** to Tech Lead
+
+If Tech Lead provides a description (`create-pr add user authentication`), use it in the title.
+
+---
+
 ### `pr-review`
 
 When the Tech Lead writes `pr-review`, I must:
