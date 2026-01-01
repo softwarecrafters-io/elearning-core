@@ -7,7 +7,7 @@ services:
       - MONGO_URI=${MONGO_URI}
       - JWT_SECRET=${JWT_SECRET}
     networks:
-      - app-network
+      - dokploy-network
     restart: unless-stopped
 
   frontend:
@@ -15,11 +15,11 @@ services:
       context: .
       dockerfile: frontend/Dockerfile
     networks:
-      - app-network
+      - dokploy-network
     depends_on:
       - backend
     restart: unless-stopped
 
 networks:
-  app-network:
-    driver: bridge
+  dokploy-network:
+    external: true
