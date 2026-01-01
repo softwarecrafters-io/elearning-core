@@ -1,0 +1,189 @@
+---
+description: Rules for domain entities
+globs: ["**/domain/entities/**/*.ts"]
+alwaysApply: false
+---
+
+# Domain Entities
+
+Entities are objects with **identity** and **lifecycle**. Two entities are equal if they have the same identity, regardless of their attributes.
+
+## Characteristics
+
+- **Identity**: Has a unique identifier (use `Id` value object)
+- **Lifecycle**: Can change state over time while maintaining its identity
+- **Behavior**: Encapsulates business logic related to itself
+- **Consistency**: Protects its invariants (business rules that must always be true)
+- **Serializable**: Provides `toPrimitives()` method for serialization
+
+## Structure
+
+```typescript
+export class Order {
+  private constructor(
+    readonly id: Id,
+    private items: OrderItem[],
+    private status: OrderStatus
+  ) {}
+
+  static create(id: Id): Order {
+    return new Order(id, [], OrderStatus.Draft);
+  }
+
+  addItem(item: OrderItem): void {
+    if (this.status !== OrderStatus.Draft) {
+      throw new Error('Cannot add items to a non-draft order');
+    }
+    this.items = [...this.items, item];
+  }
+
+  confirm(): void {
+    if (this.items.length === 0) {
+      throw new Error('Cannot confirm an empty order');
+    }
+    this.status = OrderStatus.Confirmed;
+  }
+
+  toPrimitives(): { id: string; items: Array<{ productId: string; quantity: number }>; status: string } {
+    return {
+      id: this.id.value,
+      items: this.items.map(item => item.toPrimitives()),
+      status: this.status
+    };
+  }
+}
+```
+
+## Identity
+
+- Use the generic `Id` value object for all entity identifiers
+- Never use primitive types directly for identity
+
+```typescript
+// ⚠️ WORSE - Primitive identity
+class Order {
+  constructor(readonly id: string) {}
+}
+
+// ✅ BETTER - Id value object
+class Order {
+  constructor(readonly id: Id) {}
+}
+```
+
+## toPrimitives Method
+
+Every entity must provide a `toPrimitives()` method that returns a plain object with primitive types. This enables serialization without coupling to specific DTO types.
+
+```typescript
+// ✅ GOOD - Entity with toPrimitives
+class Invoice {
+  private constructor(
+    readonly id: Id,
+    private customerId: Id,
+    private lineItems: LineItem[],
+    private total: Money,
+    private status: InvoiceStatus
+  ) {}
+
+  toPrimitives(): {
+    id: string;
+    customerId: string;
+    lineItems: Array<{ description: string; amount: number }>;
+    total: { amount: number; currency: string };
+    status: string;
+  } {
+    return {
+      id: this.id.value,
+      customerId: this.customerId.value,
+      lineItems: this.lineItems.map(item => item.toPrimitives()),
+      total: this.total.toPrimitives(),
+      status: this.status
+    };
+  }
+}
+```
+
+## Invariants
+
+Invariants are validated in **factory methods**, keeping constructors simple (assignment only).
+
+```typescript
+// ✅ GOOD - Validation in factory method, simple constructor
+class Invoice {
+  private constructor(
+    readonly id: Id,
+    private lineItems: LineItem[],
+    private total: Money,
+    private status: InvoiceStatus
+  ) {}
+
+  static create(id: Id, lineItems: LineItem[]): Invoice {
+    if (lineItems.length === 0) {
+      throw new Error('Invoice must have at least one line item');
+    }
+    const total = lineItems.reduce((sum, item) => sum.add(item.amount), Money.zero());
+    return new Invoice(id, lineItems, total, InvoiceStatus.Draft);
+  }
+}
+
+// ⚠️ WORSE - Validation in constructor
+class Invoice {
+  constructor(readonly id: Id, private lineItems: LineItem[]) {
+    if (lineItems.length === 0) {  // ❌ Validation in constructor
+      throw new Error('...');
+    }
+  }
+}
+```
+
+## Complete Objects (No Setters, No Anemic Models)
+
+Entities must be **complete at construction**. No setters, no partial initialization. Encapsulate behavior, not just data.
+
+```typescript
+// ⚠️ WORSE - Anemic model with setters
+class Order {
+  id: Id;
+  status: string;
+  
+  setStatus(status: string) { this.status = status; }  // ❌ Setter
+}
+
+// ✅ BETTER - Complete object with behavior
+class Order {
+  private constructor(
+    readonly id: Id,
+    private status: OrderStatus
+  ) {}
+
+  static create(id: Id): Order {
+    return new Order(id, OrderStatus.Draft);
+  }
+
+  confirm(): void {  // Behavior, not setter
+    if (this.status !== OrderStatus.Draft) {
+      throw new Error('Only draft orders can be confirmed');
+    }
+    this.status = OrderStatus.Confirmed;
+  }
+}
+```
+
+## Non-Negotiable Rules
+
+### ❌ I will NEVER:
+1. Use primitive types for entity identity (use `Id` value object)
+2. Expose internal collections directly (return copies or immutable views)
+3. Allow invalid state (validate in factory methods)
+4. Put infrastructure concerns in entities (persistence, HTTP)
+5. Use setters or create anemic models
+6. Validate invariants in the constructor (use factory methods)
+
+### ✅ I will ALWAYS:
+1. Keep constructors simple (assignment only)
+2. Validate invariants in factory methods
+3. Create complete objects at construction
+4. Encapsulate behavior inside the entity (rich model)
+5. Use `Id` value object for identity
+6. Implement `toPrimitives()` method for serialization

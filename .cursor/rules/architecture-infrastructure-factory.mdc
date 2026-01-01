@@ -1,0 +1,133 @@
+---
+description: Factory pattern for dependency management without DI containers
+globs: ["**/factory.ts", "**/Factory.ts"]
+alwaysApply: false
+---
+
+# Application Factory
+
+## No DI Container
+
+Use a simple Factory module to wire dependencies. No dependency injection containers (InversifyJS, tsyringe, etc.).
+
+```typescript
+// src/factory.ts
+```
+
+---
+
+## Naming Convention
+
+| Prefix | Behavior | Use Case |
+|--------|----------|----------|
+| `get` | Returns cached instance (singleton) | Repositories, shared services |
+| `create` | Creates new instance each time | UseCases, per-request objects |
+
+---
+
+## Factory Structure
+
+```typescript
+// src/common/infrastructure/factory.ts
+
+export class Factory {
+  // Cached instances
+  private static orderRepository: OrderRepository;
+  private static productRepository: ProductRepository;
+  private static mongoClient: MongoClient;
+
+  // --- Infrastructure (cached) ---
+
+  static async connectToMongo(): Promise<void> {
+    this.mongoClient = await MongoClient.connect(process.env.MONGO_URI);
+  }
+
+  private static getOrderRepository(): OrderRepository {
+    if (!this.orderRepository) {
+      this.orderRepository = new MongoOrderRepository(this.mongoClient.db());
+    }
+    return this.orderRepository;
+  }
+
+  private static getProductRepository(): ProductRepository {
+    if (!this.productRepository) {
+      this.productRepository = new MongoProductRepository(this.mongoClient.db());
+    }
+    return this.productRepository;
+  }
+
+  // --- Use Cases (new instance each time) ---
+
+  static createCreateOrderUseCase(): CreateOrderUseCase {
+    return new CreateOrderUseCase(
+      this.getOrderRepository(),
+      this.getProductRepository()
+    );
+  }
+
+  static createGetOrderUseCase(): GetOrderUseCase {
+    return new GetOrderUseCase(this.getOrderRepository());
+  }
+
+  // --- Controllers (new instance each time) ---
+
+  static createOrderController(): OrderController {
+    return new OrderController(
+      this.createCreateOrderUseCase(),
+      this.createGetOrderUseCase()
+    );
+  }
+}
+```
+
+---
+
+## When to Use `get` vs `create`
+
+### `get` (cached/singleton)
+- Database connections
+- Repository adapters
+- External service adapters
+- Anything expensive to create or stateful
+
+### `create` (new instance)
+- UseCases
+- Controllers
+- Request-scoped objects
+- Anything stateless or per-request
+
+---
+
+## File Location
+
+```
+src/
+├── factory.ts          # Main factory
+├── orders/
+│   ├── domain/
+│   ├── application/
+│   └── infrastructure/
+└── products/
+    └── ...
+```
+
+---
+
+## Non-Negotiable Rules
+
+### ❌ I will NEVER:
+1. Use DI containers (InversifyJS, tsyringe, etc.)
+2. Mix `get` and `create` semantics (cached vs new)
+3. Create circular dependencies in factory
+4. Import factory inside domain layer
+
+### ✅ I will ALWAYS:
+1. Use `get` prefix for cached instances
+2. Use `create` prefix for new instances each call
+3. Keep factory at the application root
+
+---
+
+## Testing
+
+For tests, you can create separate factory files that use InMemoryRepositories instead of real adapters. See @.cursor/rules/practices-inside-out.mdc for testing strategy.

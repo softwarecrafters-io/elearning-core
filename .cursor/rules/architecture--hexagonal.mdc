@@ -1,0 +1,254 @@
+---
+description: Hexagonal Architecture with vertical slicing by modules
+alwaysApply: true
+---
+
+# Hexagonal Architecture
+
+## Module Structure (Vertical Slicing)
+
+Code is organized by **business modules**, not by technical layer (this is also known as screaming architecture)
+
+### Structure of a Module
+
+```
+src/
+└── [module-name]/
+    ├── domain/           # Business core (no external dependencies)
+    │   ├── entities/
+    │   │   └── [Entity].ts
+    │   ├── value-objects/
+    │   │   └── [ValueObject].ts
+    │   ├── services/
+    │   │   └── [DomainService].ts
+    │   └── repositories/
+    │       └── [Repository].ts      # Interface + InMemory implementation
+    ├── application/      # Use cases and ports for external services
+    │   ├── [UseCase].ts
+    │   └── ports/
+    │       └── [ExternalService].ts # External service ports (driven)
+    ├── infrastructure/   # Adapters (concrete implementations)
+    │   ├── adapters/
+    │   │   ├── [RepositoryImpl].ts
+    │   │   └── [ApiClient].ts
+    │   └── http/         # Primary port (driver)
+    │       └── [Controller].ts
+    └── tests/        # Tests colocated within module
+        ├── unit/         # Domain + UseCase tests
+        │   ├── [Entity].test.ts
+        │   ├── [ValueObject].test.ts
+        │   └── [UseCase].test.ts
+        ├── integration/  # Repository adapter tests
+        │   └── [Repository].integration.test.ts
+        └── e2e/          # HTTP endpoint tests
+            └── [Controller].e2e.test.ts
+```
+
+---
+
+## Layers and Responsibilities
+
+### 1. Domain (Center of the Hexagon)
+
+- **Entities**: Objects with identity and lifecycle
+- **Value Objects**: Immutable objects defined by their attributes
+- **Domain Services**: Logic that doesn't belong to a specific entity
+- **Repositories**: Interfaces + InMemory implementations for persisting/retrieving domain entities
+- **DomainError**: Single error class with factory methods (see @.cursor/rules/design-errors.mdc)
+- **No dependencies** towards application or infrastructure
+- **No frameworks** or external libraries
+
+### 2. Application (Use Cases)
+
+- **Use Cases**: Orchestrate business logic
+- **External Service Ports**: Interfaces for external services (email, payments, notifications)
+- Depends **only** on Domain
+
+### 3. Infrastructure (Adapters)
+
+- **Adapters**: Concrete implementations of ports
+- **Controllers/Handlers**: HTTP entry points, CLI, events
+- Depends on Application and Domain
+- **Frameworks and libraries live here**
+
+---
+
+## Dependency Rule
+
+```
+Infrastructure → Application → Domain
+     ↓               ↓           ↓
+  (Adapters)    (Use Cases)  (Entities)
+```
+
+- Dependencies **always point towards the center**
+- Domain **never** imports from Application or Infrastructure
+- Application **never** imports from Infrastructure
+
+## Ports and Adapters
+
+### Repositories (in Domain)
+
+Repositories define contracts and include InMemory implementations in the same file.
+
+```typescript
+// src/invoices/domain/repositories/InvoiceRepository.ts
+import { Maybe } from '../../../common/domain/Maybe';
+
+export interface InvoiceRepository {
+  save(invoice: Invoice): Promise<void>;
+  findById(id: Id): Promise<Maybe<Invoice>>;
+  findByCustomer(customerId: Id): Promise<Invoice[]>;
+}
+
+export class InMemoryInvoiceRepository implements InvoiceRepository {
+  private invoices: Map<string, Invoice> = new Map();
+  // ... InMemory implementation
+}
+```
+
+### External Service Ports (in Application)
+
+External services are use case needs, not domain needs.
+
+```typescript
+// src/invoices/application/ports/InvoiceNotifier.ts
+export interface InvoiceNotifier {
+  notifyInvoiceCreated(invoice: Invoice): Promise<void>;
+  notifyPaymentReceived(invoiceId: Id): Promise<void>;
+}
+```
+
+### Implementing Adapters (in Infrastructure)
+
+```typescript
+// src/invoices/infrastructure/adapters/MongoInvoiceRepository.ts
+import { InvoiceRepository } from '../../domain/repositories/InvoiceRepository';
+
+export class MongoInvoiceRepository implements InvoiceRepository {
+  async save(invoice: Invoice): Promise<void> {
+    // MongoDB implementation
+  }
+  
+  async findById(id: Id): Promise<Maybe<Invoice>> {
+    // MongoDB implementation - use Maybe.fromNullable()
+  }
+
+  async findByCustomer(customerId: Id): Promise<Invoice[]> {
+    // MongoDB implementation
+  }
+}
+```
+
+```typescript
+// src/invoices/infrastructure/adapters/EmailInvoiceNotifier.ts
+import { InvoiceNotifier } from '../../application/ports/InvoiceNotifier';
+
+export class EmailInvoiceNotifier implements InvoiceNotifier {
+  async notifyInvoiceCreated(invoice: Invoice): Promise<void> {
+    // Send email via SMTP/SendGrid/etc
+  }
+
+  async notifyPaymentReceived(invoiceId: Id): Promise<void> {
+    // Send payment confirmation email
+  }
+}
+```
+
+---
+
+## Cross-Module Communication
+
+In a modular monolith, modules can share code with some restrictions.
+
+### ✅ Can import from another module
+
+- Domain entities and value objects
+- Ports (interfaces)
+- Adapters (prefer ports for testability)
+
+```typescript
+// ✅ GOOD - Importing domain and repositories from another module
+import { Product } from '../../products/domain/entities/Product';
+import { ProductRepository } from '../../products/domain/repositories/ProductRepository';
+```
+
+### ❌ Cannot import from another module
+
+- UseCases (a UseCase must never call another UseCase)
+
+```typescript
+// ❌ BAD - Importing a UseCase from another module
+import { CreateProductUseCase } from '../../products/application/CreateProductUseCase';
+```
+
+---
+
+## Naming Conventions
+
+### Allowed suffixes by layer
+
+| Layer | Allowed Suffixes |
+|-------|-----------------|
+| Domain | Entity (implicit), ValueObject, DomainService, Repository (interface + InMemory) |
+| Application | UseCase, Service, DTO, Port (for external services) |
+| Infrastructure | Repository (impl), Adapter, Controller, Handler, Client |
+
+### File naming
+
+- One file per class/interface
+- File name = Class name
+- Use PascalCase: `CreateOrderUseCase.ts`, `InvoiceRepository.ts`
+
+### Examples
+
+```typescript
+// Domain - entities/
+Order.ts              // Entity
+
+// Domain - value-objects/
+Money.ts              // Value Object
+OrderId.ts            // Value Object
+PositiveNumber.ts     // Value Object
+
+// Domain - services/
+PricingService.ts     // Domain Service
+
+// Domain - repositories/
+OrderRepository.ts    // Interface + InMemory implementation
+
+// Application
+CreateOrderUseCase.ts
+CalculateInvoiceUseCase.ts
+PaymentGateway.ts     // External service port (interface)
+InvoiceNotifier.ts    // External service port (interface)
+
+// Infrastructure
+MongoOrderRepository.ts     // Repository adapter
+StripePaymentAdapter.ts     // External service adapter
+EmailInvoiceNotifier.ts     // External service adapter
+OrderController.ts          // HTTP controller
+
+// Shared
+DomainError.ts        // DomainError class with factory methods
+```
+
+---
+
+## Non-Negotiable Rules
+
+### ❌ I will NEVER:
+1. Import frameworks or libraries in Domain
+2. Import from Application or Infrastructure in Domain
+3. Import from Infrastructure in Application
+4. Import a UseCase from another module (UseCases don't call other UseCases)
+5. Put business logic in Infrastructure
+6. Create "God" classes that do everything (OrderManager, ProductHelper)
+
+### ✅ I will ALWAYS:
+1. Create a port (interface) before its adapter
+2. Keep Domain free of external dependencies
+3. Validate the dependency rule on every import
+4. Group code by business module, not by technical layer
+5. Consult the Tech Lead before creating a new module
+6. Follow @.cursor/rules/design-naming.mdc and @.cursor/rules/design-functions.mdc for naming and functions

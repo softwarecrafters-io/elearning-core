@@ -1,0 +1,64 @@
+---
+description: Backend hexagonal architecture rules
+globs: ["backend/**/*.ts"]
+alwaysApply: false
+---
+
+# Backend - Hexagonal Architecture
+
+The backend follows hexagonal architecture with vertical slicing.
+
+## Module Structure
+
+```
+backend/src/
+├── auth/
+│   ├── domain/
+│   │   ├── entities/
+│   │   ├── value-objects/
+│   │   ├── services/
+│   │   └── repositories/
+│   ├── application/
+│   │   ├── ports/
+│   │   └── *UseCase.ts
+│   ├── infrastructure/
+│   │   ├── adapters/
+│   │   └── http/
+│   └── tests/
+├── health/
+│   └── (same structure)
+└── common/
+    ├── domain/
+    ├── application/
+    └── infrastructure/
+```
+
+## Shared Package Imports
+
+Use `@email-login/common` for Maybe, DomainError and API types:
+
+```typescript
+import { Maybe } from '@email-login/common/src/domain/Maybe';
+import { DomainError } from '@email-login/common/src/domain/DomainError';
+```
+
+## Dependency Rules
+
+```
+Infrastructure → Application → Domain
+```
+
+- Domain **never** imports from Application or Infrastructure
+- Application **never** imports from Infrastructure
+
+## Non-Negotiable Rules
+
+### ❌ NEVER:
+1. Import from frontend
+2. Put business logic in Infrastructure
+3. Import Infrastructure from Domain
+
+### ✅ ALWAYS:
+1. Follow existing hexagonal architecture rules
+2. Use @email-login/common for shared types
+3. Implement with TDD

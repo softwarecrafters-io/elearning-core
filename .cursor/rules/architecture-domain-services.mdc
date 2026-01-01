@@ -1,0 +1,119 @@
+---
+description: Rules for domain services
+globs: ["**/domain/services/**/*.ts"]
+alwaysApply: false
+---
+
+# Domain Services
+
+Domain Services contain **business logic** that doesn't naturally belong to a specific entity or value object. They are **stateless** functions that operate on domain objects.
+
+## When to Use
+
+Use a Domain Service when:
+- The logic involves **multiple entities**
+- The logic doesn't naturally belong to any single entity
+- You need to enforce a **business rule** that spans aggregates
+
+## Characteristics
+
+- **Stateless**: Pure functions, same input always produces same output
+- **Domain language**: Named using domain terminology
+- **Pure domain logic**: No infrastructure concerns (no DB, no HTTP)
+- **Operates on domain objects**: Receives and returns entities/value objects
+
+## Structure
+
+Domain services are **functions**, not classes. Group related functions in a module.
+
+```typescript
+// src/orders/domain/services/pricing.ts
+
+export function calculateOrderTotal(order: Order, discounts: Discount[]): Money {
+  const subtotal = order.calculateSubtotal();
+  const applicableDiscounts = discounts.filter(d => d.appliesTo(order));
+  
+  return applicableDiscounts.reduce(
+    (total, discount) => discount.apply(total),
+    subtotal
+  );
+}
+
+export function applyVolumeDiscount(order: Order): Money {
+  const volumeThreshold = 10;
+  const discountPercentage = 0.1;
+  
+  if (order.totalQuantity() >= volumeThreshold) {
+    return order.calculateSubtotal().multiply(discountPercentage);
+  }
+  return Money.zero();
+}
+```
+
+## Examples
+
+```typescript
+// ✅ GOOD - Domain service as functions in a module
+// src/shipping/domain/services/shippingCalculator.ts
+
+export function calculateShippingCost(order: Order, destination: Address): Money {
+  const weight = order.totalWeight();
+  const zone = determineZone(destination);
+  
+  return calculateCostByZone(weight, zone);
+}
+
+function determineZone(destination: Address): ShippingZone {
+  // Business logic to determine shipping zone
+}
+
+function calculateCostByZone(weight: Weight, zone: ShippingZone): Money {
+  // Business logic to calculate cost
+}
+```
+
+## Domain Service vs Use Case
+
+| Domain Service | Use Case |
+|----------------|----------|
+| Pure functions | Orchestrates application flow |
+| No external dependencies | Uses ports (repositories, external services) |
+| Lives in `domain/services/` | Lives in `application/` |
+| Called by entities or use cases | Entry point from infrastructure |
+
+```typescript
+// Domain Service - pure function
+// src/orders/domain/services/pricing.ts
+export function calculateDiscount(order: Order): Money { ... }
+
+// Use Case - orchestrates and uses ports
+// src/orders/application/CreateOrderUseCase.ts
+import { calculateDiscount } from '../domain/services/pricing';
+
+class CreateOrderUseCase {
+  constructor(private orderRepository: OrderRepository) {}
+
+  execute(productId: string, quantity: number): Order {
+    const order = Order.create(...);
+    const discount = calculateDiscount(order);
+    order.applyDiscount(discount);
+    this.orderRepository.save(order);
+    return order;
+  }
+}
+```
+
+## Non-Negotiable Rules
+
+### ❌ I will NEVER:
+1. Create stateful domain services (no classes with state)
+2. Inject ports or infrastructure dependencies into domain services
+3. Call external services (HTTP, DB) from domain services
+4. Name domain services with generic suffixes (Helper, Util, Manager)
+
+### ✅ I will ALWAYS:
+1. Write domain services as pure functions
+2. Group related functions in a module file
+3. Use domain language for naming
+4. Operate only on domain objects (entities, value objects)
+5. Consider if the logic belongs in an entity first before creating a service

@@ -1,0 +1,166 @@
+---
+description: DTO rules for application boundaries
+globs: ["**/application/**/*DTO.ts", "**/application/**/*Request.ts", "**/application/**/*Response.ts"]
+alwaysApply: false
+---
+
+# DTOs & Boundaries
+
+## Where DTOs Live
+
+DTOs live in the **Application layer**, next to the UseCases that use them.
+
+```
+src/orders/
+├── application/
+│   ├── CreateOrderUseCase.ts
+│   ├── GetOrderUseCase.ts
+│   ├── CreateOrderRequest.ts   # Request DTO (if >3 params)
+│   ├── OrderDTO.ts             # Response DTO
+│   └── ports/
+└── ...
+```
+
+---
+
+## Request DTOs
+
+Use Request DTOs only when the UseCase has **more than 3 parameters**.
+
+### ≤3 Parameters: Use primitives
+
+```typescript
+// ✅ GOOD - 2 parameters, use primitives
+class CreateOrderUseCase {
+  async execute(productId: string, quantity: number): Promise<OrderDTO> {
+    // ...
+  }
+}
+```
+
+### >3 Parameters: Use Request DTO
+
+```typescript
+// ✅ GOOD - 5 parameters, use Request DTO
+interface CreateInvoiceRequest {
+  customerId: string;
+  description: string;
+  amount: number;
+  currency: string;
+  dueDate: string;
+}
+
+class CreateInvoiceUseCase {
+  async execute(request: CreateInvoiceRequest): Promise<InvoiceDTO> {
+    // Create value objects from primitives inside
+    const customerId = Id.create(request.customerId);
+    const money = Money.create(request.amount, request.currency);
+    // ...
+  }
+}
+```
+
+---
+
+## Response DTOs
+
+UseCases **return DTOs directly**, not domain entities.
+
+```typescript
+// src/orders/application/OrderDTO.ts
+interface OrderDTO {
+  id: string;
+  status: string;
+  total: number;
+  currency: string;
+  items: OrderItemDTO[];
+  createdAt: string;
+}
+
+interface OrderItemDTO {
+  productId: string;
+  productName: string;
+  quantity: number;
+  unitPrice: number;
+}
+```
+
+### Mapping in UseCase
+
+```typescript
+class GetOrderUseCase {
+  async execute(orderId: string): Promise<OrderDTO> {
+    const order = await this.orderRepository.findById(Id.create(orderId));
+    if (!order) {
+      throw DomainError.createNotFound(`Order ${orderId} not found`);
+    }
+    return this.toDTO(order);
+  }
+
+  private toDTO(order: Order): OrderDTO {
+    return order.toPrimitives();
+  }
+}
+```
+
+If the DTO needs a different structure, transform in `toDTO`:
+
+```typescript
+private toDTO(order: Order): OrderSummaryDTO {
+  const primitives = order.toPrimitives();
+  return {
+    id: primitives.id,
+    totalAmount: primitives.total.amount,
+    itemCount: primitives.items.length,
+  };
+}
+```
+
+---
+
+## DTO Characteristics
+
+- **Plain objects**: No methods, no behavior
+- **Primitive types only**: string, number, boolean, arrays, nested DTOs
+- **No domain types**: No Money, no Id, no entities
+- **Serializable**: Can be JSON.stringify'd directly
+
+```typescript
+// ❌ BAD - Contains domain types
+interface OrderDTO {
+  id: Id;           // Domain type!
+  total: Money;     // Domain type!
+}
+
+// ✅ GOOD - Only primitives
+interface OrderDTO {
+  id: string;
+  total: number;
+  currency: string;
+}
+```
+
+---
+
+## Naming Conventions
+
+| Type | Suffix | Example |
+|------|--------|---------|
+| Response | DTO | `OrderDTO`, `ProductDTO` |
+| Request (>3 params) | Request | `CreateOrderRequest` |
+
+---
+
+## Non-Negotiable Rules
+
+### ❌ I will NEVER:
+1. Return domain entities from UseCases
+2. Use domain types (Money, Id) in DTOs
+3. Put DTOs in the Domain layer
+4. Create Request DTOs for ≤3 parameters
+
+### ✅ I will ALWAYS:
+1. Return DTOs from UseCases
+2. Use only primitive types in DTOs
+3. Keep DTOs in the Application layer
+4. Map entities to DTOs inside the UseCase

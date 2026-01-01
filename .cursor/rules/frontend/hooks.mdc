@@ -1,0 +1,81 @@
+---
+description: Rules for React hooks
+globs: ["frontend/**/*.hook.ts"]
+alwaysApply: false
+---
+
+# React Hooks
+
+## State Management
+
+- State must be grouped in a **single object** with a typed interface
+- Use `Maybe<T>` for optional values, **never null**
+- Initial state uses `Maybe.none()` for optional fields
+
+```typescript
+interface HealthState {
+  health: Maybe<HealthDTO>;
+  loading: boolean;
+  error: Maybe<Error>;
+}
+
+const initialState: HealthState = {
+  health: Maybe.none(),
+  loading: false,
+  error: Maybe.none(),
+};
+```
+
+## No useEffect
+
+- Hooks do **NOT** contain useEffect
+- useEffect belongs in the **component**, not the hook
+- Hooks provide state and action functions, components orchestrate lifecycle
+
+## Return Pattern
+
+- Return `{ state, actionFn }` structure
+- Use `useCallback` for action functions that will be in dependency arrays
+- Action functions update state using `Maybe.some()` and `Maybe.none()`
+
+```typescript
+export function useHealth(useCase: HealthUseCase) {
+  const [state, setState] = useState<HealthState>(initialState);
+
+  const fetch = useCallback(async () => {
+    setState({ health: Maybe.none(), loading: true, error: Maybe.none() });
+    try {
+      const health = await useCase.execute();
+      setState({ health: Maybe.some(health), loading: false, error: Maybe.none() });
+    } catch (error) {
+      setState({ health: Maybe.none(), loading: false, error: Maybe.some(error as Error) });
+    }
+  }, [useCase]);
+
+  return { state, fetch };
+}
+```
+
+## Maybe Import
+
+```typescript
+import { Maybe } from '@email-login/common/src/domain/Maybe';
+```
+
+## File Naming
+
+- `ComponentName.hook.ts` (e.g., `Health.hook.ts`)
+
+## Non-Negotiable Rules
+
+### ❌ NEVER:
+1. Use null or undefined for optional values (use Maybe)
+2. Put useEffect inside hooks
+3. Return multiple separate state values (group in object)
+4. Destructure props in hook parameters
+
+### ✅ ALWAYS:
+1. Group state in single typed interface
+2. Use Maybe.none() for initial optional values
+3. Use useCallback for action functions
+4. Return { state, actionFn } pattern

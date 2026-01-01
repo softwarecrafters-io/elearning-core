@@ -1,0 +1,98 @@
+---
+description: Rules for React components
+globs: ["frontend/**/*.tsx"]
+alwaysApply: false
+---
+
+# React Components
+
+## Props
+
+- **NO destructuring**: use `props.x`, not `{ x }`
+- Props interface defined above component function
+- Use explicit interface, not inline type
+
+```typescript
+interface Props {
+  useCase: HealthUseCase;
+}
+
+export function Health(props: Props) {
+  const { state, fetch } = useHealth(props.useCase);
+  // ...
+}
+```
+
+## useEffect
+
+- useEffect lives in the **component**, not in hooks
+- Trigger hook action functions from useEffect
+- Dependencies should include the action function from the hook
+
+```typescript
+export function Health(props: Props) {
+  const { state, fetch } = useHealth(props.useCase);
+
+  useEffect(() => {
+    fetch();
+  }, [fetch]);
+
+  // ...
+}
+```
+
+## Maybe Handling
+
+- Use `state.value.isSome()` for conditionals
+- Use `state.value.fold()` for rendering different states
+- Use `state.value.getOrThrow()` only when `isSome()` is already checked
+
+```typescript
+if (state.error.isSome()) {
+  return (
+    <div className={styles.error}>
+      Error: {state.error.getOrThrow().message}
+    </div>
+  );
+}
+
+return state.health.fold(
+  () => <div className={styles.empty}>No health data</div>,
+  (health) => (
+    <div className={styles.container}>
+      <span className={health.isHealthy ? styles.healthy : styles.unhealthy}>
+        {health.status}
+      </span>
+    </div>
+  )
+);
+```
+
+## Styling
+
+- CSS Modules only
+- File naming: `ComponentName.module.css`
+- Import as `styles`
+
+```typescript
+import styles from './Health.module.css';
+```
+
+## File Naming
+
+- `ComponentName.tsx` (e.g., `Health.tsx`)
+
+## Non-Negotiable Rules
+
+### ❌ NEVER:
+1. Destructure props: `function Health({ useCase })` 
+2. Put useEffect inside hooks
+3. Use inline styles or global CSS
+4. Use null checks instead of Maybe methods
+
+### ✅ ALWAYS:
+1. Access props via `props.x`
+2. Define Props interface above component
+3. Use Maybe.fold() for rendering optional values
+4. Use CSS Modules for styling
+5. Put useEffect in component to trigger hook actions

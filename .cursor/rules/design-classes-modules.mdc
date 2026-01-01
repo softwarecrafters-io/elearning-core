@@ -1,0 +1,63 @@
+---
+description: Classes and modules design standards
+alwaysApply: true
+---
+
+# Classes and Modules Standards
+
+1. **Minimum scope for maximum cohesion**. If a method or function only uses a constant and nobody else uses it, put it inside the function
+
+2. **Simple constructors**. If they have validation logic at creation, move it to a factory method and make the constructor private. If there's no complex validation, don't create unnecessary factory method
+
+3. **Class organization**: Public constructor(s) first (if they exist), followed by private constructor, then public API, finally private methods. In TypeScript, properties can be auto-injected in the constructor
+
+4. **Encapsulation by default**. Use `private` for methods and don't export functions unless necessary. Limit accessibility
+
+5. **Apply Law of Demeter and Tell, Don't Ask**
+
+6. **Avoid anemic models**. Classes should encapsulate behavior, except at application boundaries where you can use DTOs
+
+7. **Complete objects at construction**. Objects should be fully initialized when created
+
+8. **Never use JavaScript getters/setters**. Don't use `get` or `set` syntax. Use explicit methods instead (`calculateTotal()`, `uptime()`) or readonly properties. Getters hide computation behind property access syntax, making it unclear when code has side effects or performance implications
+
+9. **Never use singletons**. If an instance has global state, it should be managed by the application's factory module
+
+10. **Composition over inheritance**. Avoid inheritance, prioritize composition
+
+11. **Domain-specific types**. Build classes with behavior, especially in the application domain
+
+```typescript
+// Tell, Don't Ask and Law of Demeter:
+// ⚠️ WORSE - Ask (we ask and decide outside)
+if (order.customer().address().city() === "Madrid") {
+  order.applyDiscount(10);
+}
+
+// ✅ BETTER - Tell (we tell it what to do)
+order.applyDiscountForCity("Madrid", 10);
+
+// ⚠️ WORSE - Law of Demeter violation (long chain)
+const city = user.account().settings().location().city();
+
+// ✅ BETTER - Law of Demeter (single dot)
+const city = user.city();
+
+// Anemic Model vs Rich Model:
+// ⚠️ WORSE - Anemic model
+class Order {
+  items: Item[];
+  total: number;
+}
+// Logic outside
+const total = order.items.reduce((sum, item) => sum + item.price, 0);
+
+// ✅ BETTER - Rich model
+class Order {
+  private items: Item[];
+  
+  calculateTotal(): number {
+    return this.items.reduce((sum, item) => sum + item.price, 0);
+  }
+}
+```

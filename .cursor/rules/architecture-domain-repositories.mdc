@@ -1,0 +1,163 @@
+---
+description: Rules for domain repository ports and InMemory implementations
+globs: ["**/domain/repositories/**/*.ts", "**/infrastructure/adapters/**Repository.ts"]
+alwaysApply: false
+---
+
+# Domain Repositories
+
+## Repository Interface + InMemory Implementation
+
+Repository interfaces and their InMemory implementations live together in `domain/repositories/`. This keeps the domain self-contained and testable.
+
+```typescript
+// src/orders/domain/repositories/OrderRepository.ts
+import { Maybe } from '../../../common/domain/Maybe';
+
+// Interface
+export interface OrderRepository {
+  save(order: Order): Promise<void>;
+  findById(id: Id): Promise<Maybe<Order>>;
+  findByCustomer(customerId: Id): Promise<Order[]>;
+}
+
+// InMemory implementation (same file)
+export class InMemoryOrderRepository implements OrderRepository {
+  private orders: Map<string, Order> = new Map();
+
+  constructor(initialOrders: Order[] = []) {
+    initialOrders.forEach(order => this.orders.set(order.id.value, order));
+  }
+
+  async save(order: Order): Promise<void> {
+    this.orders.set(order.id.value, order);
+  }
+
+  async findById(id: Id): Promise<Maybe<Order>> {
+    return Maybe.fromNullable(this.orders.get(id.value));
+  }
+
+  async findByCustomer(customerId: Id): Promise<Order[]> {
+    return Array.from(this.orders.values())
+      .filter(order => order.customerId.equals(customerId));
+  }
+}
+```
+
+## Repository Characteristics
+
+- **Domain language**: Use domain terms, not database terms
+- **Entity-centric**: Work with domain entities, not primitives or DTOs
+- **No implementation details**: The interface doesn't reveal storage mechanism
+
+```typescript
+// ⚠️ WORSE - Database-oriented interface
+interface OrderRepository {
+  insert(order: OrderDocument): Promise<void>;
+  findOne(id: string): Promise<OrderDocument | null>;
+}
+
+// ✅ BETTER - Domain-oriented interface
+interface OrderRepository {
+  save(order: Order): Promise<void>;
+  findById(id: Id): Promise<Maybe<Order>>;
+}
+```
+
+---
+
+## InMemory Repository Characteristics
+
+- **Same interface**: Implements the same contract as the real adapter
+- **In-memory storage**: Uses Map, Array, or simple data structures
+- **Seed data**: Constructor accepts initial data for test setup
+- **Lives in domain**: Part of the domain, not infrastructure
+
+---
+
+## Real Adapter (Infrastructure)
+
+Real adapters implement the repository interface with actual database logic. They live in `infrastructure/adapters/`.
+
+```typescript
+// src/orders/infrastructure/adapters/MongoOrderRepository.ts
+import { OrderRepository } from '../../domain/repositories/OrderRepository';
+
+export class MongoOrderRepository implements OrderRepository {
+  constructor(private collection: Collection<OrderDocument>) {}
+
+  async save(order: Order): Promise<void> {
+    const document = this.toDocument(order);
+    await this.collection.updateOne(
+      { _id: document._id },
+      { $set: document },
+      { upsert: true }
+    );
+  }
+
+  async findById(id: Id): Promise<Maybe<Order>> {
+    const document = await this.collection.findOne({ _id: id.value });
+    return Maybe.fromNullable(document).map(doc => this.toDomain(doc));
+  }
+
+  async findByCustomer(customerId: Id): Promise<Order[]> {
+    const documents = await this.collection.find({ customerId: customerId.value }).toArray();
+    return documents.map(doc => this.toDomain(doc));
+  }
+
+  private toDocument(order: Order): OrderDocument {
+    const primitives = order.toPrimitives();
+    return {
+      _id: primitives.id,
+      customerId: primitives.customerId,
+      items: primitives.items,
+      status: primitives.status
+    };
+  }
+
+  private toDomain(document: OrderDocument): Order {
+    // Map MongoDB document to domain entity
+  }
+}
+```
+
+---
+
+## When to Use Each
+
+| Context | Use |
+|---------|-----|
+| UseCase unit tests | InMemoryRepository |
+| Repository adapter tests | Real adapter + Real DB |
+| E2E tests | Real adapter + Real DB |
+| Production | Real adapter |
+
+---
+
+## File Structure
+
+```
+src/orders/
+├── domain/
+│   └── repositories/
+│       └── OrderRepository.ts       # Interface + InMemory (same file)
+└── infrastructure/
+    └── adapters/
+        └── MongoOrderRepository.ts  # Real adapter for production
+```
+
+---
+
+## Non-Negotiable Rules
+
+### ❌ I will NEVER:
+1. Mock repositories in UseCase tests (use InMemory instead)
+2. Put database logic in the repository interface
+3. Return database documents or DTOs from repositories (return entities)
+4. Use repository implementations directly in domain layer
+
+### ✅ I will ALWAYS:
+1. Define repository interfaces in `domain/repositories/`
+2. Put InMemory implementation in the same file as the interface
+3. Use InMemoryRepository in UseCase tests
+4. Test real adapters against real databases (integration tests)

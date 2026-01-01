@@ -1,0 +1,60 @@
+{
+  "name": "@app/backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Backend API",
+  "main": "lib/main.js",
+  "scripts": {
+    "start": "tsx watch src/main.ts",
+    "start:test": "NODE_ENV=test tsx src/main.ts",
+    "start:prod": "node lib/main.js",
+    "build": "npm run clean && tsc -b",
+    "clean": "rm -rf lib coverage",
+    "compile": "tsc --noEmit",
+    "lint": "eslint . --ext .ts,.tsx",
+    "lint:fix": "eslint . --ext .ts,.tsx --fix",
+    "test": "jest",
+    "test:unit": "jest --testPathPatterns=unit",
+    "test:integration": "jest --testPathPatterns=integration",
+    "test:e2e": "jest --testPathPatterns=e2e",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
+  },
+  "author": "Softwarecrafters.io",
+  "license": "MIT",
+  "dependencies": {
+    "@app/common": "*",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "mongodb": "^7.0.0",
+    "pino": "^10.1.0",
+    "pino-http": "^11.0.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/jest": "30.0.0",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "24.10.1",
+    "@types/supertest": "^6.0.3",
+    "@typescript-eslint/eslint-plugin": "8.48.1",
+    "@typescript-eslint/parser": "8.48.1",
+    "eslint": "9.39.1",
+    "eslint-config-prettier": "10.1.8",
+    "eslint-plugin-prettier": "5.5.4",
+    "jest": "30.2.0",
+    "mongodb-memory-server": "^11.0.1",
+    "prettier": "3.7.4",
+    "supertest": "^7.1.4",
+    "ts-jest": "29.4.6",
+    "tsx": "^4.21.0",
+    "typescript": "5.9.3"
+  },
+  "config": {
+    "mongodbMemoryServer": {
+      "version": "7.0.14"
+    }
+  }
+}

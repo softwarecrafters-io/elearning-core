@@ -1,0 +1,179 @@
+---
+description: Frontend hexagonal architecture rules
+globs: ["frontend/**/*.ts", "frontend/**/*.tsx"]
+alwaysApply: false
+---
+
+# Frontend - Hexagonal Architecture
+
+The frontend follows the same hexagonal architecture as the backend.
+
+## Module Structure
+
+```
+frontend/src/
+├── [module]/
+│   ├── domain/
+│   │   ├── entities/
+│   │   │   └── Entity.ts
+│   │   └── repositories/
+│   │       └── Repository.ts     # Interface + InMemory
+│   ├── application/
+│   │   ├── ModuleUseCase.ts
+│   │   └── ModuleDTO.ts          # DTO for UI
+│   ├── infrastructure/
+│   │   ├── adapters/
+│   │   │   └── HttpRepository.ts # Uses API types from common
+│   │   └── ui/
+│   │       ├── Component.tsx
+│   │       ├── Component.module.css
+│   │       └── Component.hook.ts
+│   └── tests/
+│       └── unit/
+│           ├── domain/
+│           ├── application/
+│           └── infrastructure/
+└── common/
+    └── infrastructure/
+        └── ui/                   # Common components
+```
+
+## Layers
+
+### Domain
+- Entities: Frontend-specific domain objects
+- Repositories: Interface + InMemory implementations
+- **NO imports from common/infrastructure/api/**
+
+### Application
+- **Use Cases**: Orchestrate frontend logic, return DTOs
+- **DTOs**: Plain objects for UI consumption
+- **NO imports from common/infrastructure/api/**
+
+### Infrastructure
+- **Adapters**: Concrete implementations (HTTP, localStorage)
+- **API types ONLY HERE**: Import from `@email-login/common/src/infrastructure/api/`
+- **UI**: React components, hooks, CSS Modules
+
+## API Types Usage
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ Infrastructure (adapters)                                       │
+│   ✅ Can import: @email-login/common/src/infrastructure/api/    │
+│   Transforms: API types -> Domain entities                      │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ Domain                                                          │
+│   ❌ Cannot import from common/api                              │
+│   Defines own entities and repository interfaces                │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ Application                                                     │
+│   ❌ Cannot import from common/api                              │
+│   Uses domain entities, returns DTOs                            │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+## Repositories
+
+```typescript
+// domain/repositories/HealthRepository.ts
+import { Health } from '../entities/Health';
+
+export interface HealthRepository {
+  check(): Promise<Health>;
+}
+
+export class InMemoryHealthRepository implements HealthRepository {
+  constructor(private readonly health: Health) {}
+
+  async check(): Promise<Health> {
+    return this.health;
+  }
+}
+```
+
+## Adapters (API types allowed)
+
+```typescript
+// infrastructure/adapters/HttpHealthRepository.ts
+import { HealthRepository } from '../../domain/repositories/HealthRepository';
+import { Health } from '../../domain/entities/Health';
+import { HealthResponse } from '@email-login/common/src/infrastructure/api/health';
+
+export class HttpHealthRepository implements HealthRepository {
+  async check(): Promise<Health> {
+    const response = await fetch('/api/health');
+    const data: HealthResponse = await response.json();
+    return Health.create(data.status, data.database);
+  }
+}
+```
+
+## UI Patterns
+
+See detailed rules in:
+- @.cursor/rules/frontend/hooks.mdc
+- @.cursor/rules/frontend/components.mdc
+
+### Hook Pattern
+
+```typescript
+// Component.hook.ts
+export function useHealth(useCase: HealthUseCase) {
+  const [state, setState] = useState<HealthState>(initialState);
+  
+  const fetch = useCallback(async () => { ... }, [useCase]);
+  
+  return { state, fetch };
+}
+```
+
+### Component Pattern
+
+```typescript
+// Component.tsx
+export function Health(props: Props) {
+  const { state, fetch } = useHealth(props.useCase);
+  
+  useEffect(() => { fetch(); }, [fetch]);
+  
+  return state.health.fold(...);
+}
+```
+
+## Common Package Imports
+
+```typescript
+// ✅ Domain utilities (allowed everywhere)
+import { Maybe } from '@email-login/common/src/domain/Maybe';
+import { DomainError } from '@email-login/common/src/domain/DomainError';
+
+// ⚠️ API types (ONLY in infrastructure/adapters/)
+import { HealthResponse } from '@email-login/common/src/infrastructure/api/health';
+```
+
+## Non-Negotiable Rules
+
+### ❌ NEVER:
+1. Import from backend
+2. Import API types outside of infrastructure/adapters/
+3. Put business logic in UI components
+4. Use global CSS (except index.css for resets)
+5. Access fetch directly from components (use repositories)
+6. Use null (use Maybe)
+7. Use setters in InMemory repositories
+
+### ✅ ALWAYS:
+1. UI lives in infrastructure/ui/
+2. Logic in application/ (use cases)
+3. Use CSS Modules for styles
+4. Implement with TDD
+5. Use Maybe for optional values
+6. useEffect in component, not hook
+7. No props destructuring

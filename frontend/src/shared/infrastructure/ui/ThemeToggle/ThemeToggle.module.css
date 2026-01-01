@@ -1,0 +1,35 @@
+.themeToggle {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: var(--icon-color);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: color 0.15s ease;
+  z-index: 1000;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.themeToggle:hover {
+  color: var(--text-color);
+}
+
+.themeToggle:focus,
+.themeToggle:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+.icon {
+  width: 16px;
+  height: 16px;
+}

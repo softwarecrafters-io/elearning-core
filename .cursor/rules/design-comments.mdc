@@ -1,0 +1,52 @@
+---
+description: Comments and formatting standards
+alwaysApply: true
+---
+
+# Comments and Formatting
+
+## Comments
+
+- **Code should be self-explanatory**. If you need a comment, the code is not clear enough
+- **Never comment what the code does**. The code already says that
+- **Only comment WHY, never WHAT**. Explain the reason behind a non-obvious decision
+- **Don't add comments to functions**. No JSDoc, no parameter descriptions. The signature should be self-explanatory
+- **Delete commented code**. Version control exists for a reason
+
+```typescript
+// ⚠️ WORSE - Commenting what
+// Increment counter by 1
+counter++;
+
+// ⚠️ WORSE - Commented code
+// const oldValue = calculate();
+const newValue = calculate();
+
+// ✅ BETTER - Self-explanatory code, no comment needed
+const invoiceTotal = calculateInvoiceTotal(lineItems);
+```
+
+```typescript
+// ⚠️ WORSE - JSDoc on function
+/**
+ * Calculates the total price of an order
+ * @param order - The order to calculate
+ * @returns The total price
+ */
+function calc(order: Order): Money {
+  return order.items.reduce((sum, item) => sum.add(item.price), Money.zero());
+}
+
+// ✅ BETTER - Self-explanatory signature, no comments
+function calculateTotal(order: Order): Money {
+  return order.items.reduce((sum, item) => sum.add(item.price), Money.zero());
+}
+```
+
+## Formatting
+
+- Let the formatter handle it (Prettier, ESLint)
+- Consistent indentation (spaces over tabs)
+- One statement per line
+- **No blank lines inside functions/methods**. Blank lines only between functions or classes
+- Use braces for conditions, that's enough separation

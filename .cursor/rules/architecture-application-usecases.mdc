@@ -1,0 +1,169 @@
+---
+description: Rules for application use cases
+globs: ["**/*UseCase.ts"]
+alwaysApply: false
+---
+
+# Use Cases
+
+Use Cases **orchestrate** the application flow. They are the entry points for business operations, coordinating domain objects and ports to fulfill a specific user intention.
+
+**Design principle**: Use cases should be designed as if they were invoked from the terminal. This means using **primitive parameters** (strings, numbers, booleans) instead of complex objects. Can be DTOS.
+
+## Characteristics
+
+- **Single responsibility**: One use case = one user intention
+- **Orchestration**: Coordinates domain objects and ports
+- **Application boundary**: Entry point from infrastructure to domain
+- **Stateless**: No internal state between executions
+- **Terminal-friendly**: Primitive parameters for easy invocation
+
+## Structure
+
+```typescript
+import { calculateDiscount } from '../domain/services/pricing';
+
+export class CreateOrderUseCase {
+  constructor(
+    private orderRepository: OrderRepository,
+    private productRepository: ProductRepository
+  ) {}
+
+  async execute(productId: string, quantity: number): Promise<Order> {
+    const product = await this.productRepository.findById(Id.create(productId));
+    if (!product) {
+      throw new Error('Product not found');
+    }
+
+    const order = Order.create(Id.generate());
+    order.addItem(product, quantity);
+    
+    const discount = calculateDiscount(order);
+    order.applyDiscount(discount);
+
+    await this.orderRepository.save(order);
+    return order;
+  }
+}
+```
+
+## Terminal-Friendly Parameters
+
+Use cases receive **primitive types** as parameters. Value objects are created inside the use case.
+
+```typescript
+// ⚠️ WORSE - Complex request object
+class CreateOrderUseCase {
+  execute(request: { customerId: string; productId: string; quantity: number }): Promise<Order> { ... }
+}
+
+// ✅ BETTER - Primitive parameters (terminal-friendly)
+class CreateOrderUseCase {
+  execute(productId: string, quantity: number): Promise<Order> { ... }
+}
+
+// ✅ ALSO GOOD - When more than 3 parameters, group them in a Request DTO
+interface CreateInvoiceRequest {
+  customerId: string;
+  description: string;
+  amount: number;
+  currency: string;
+  dueDate: string;
+}
+
+class CreateInvoiceUseCase {
+  execute(request: CreateInvoiceRequest): Promise<Invoice> { ... }
+}
+```
+
+## Single Entry Point
+
+Each use case should have a **single public method**: `execute`.
+
+```typescript
+// ⚠️ WORSE - Multiple entry points
+class OrderUseCase {
+  create() { ... }
+  update() { ... }
+  delete() { ... }
+}
+
+// ✅ BETTER - Single responsibility
+class CreateOrderUseCase {
+  execute(productId: string, quantity: number): Promise<Order> { ... }
+}
+
+class UpdateOrderUseCase {
+  execute(orderId: string, quantity: number): Promise<Order> { ... }
+}
+
+class DeleteOrderUseCase {
+  execute(orderId: string): Promise<void> { ... }
+}
+```
+
+## Dependencies
+
+Use Cases can depend on:
+- **Ports** (interfaces): Repositories, external services
+- **Domain Services** (functions): For complex business logic
+
+```typescript
+import { calculateShippingCost } from '../domain/services/shippingCalculator';
+
+class ProcessPaymentUseCase {
+  constructor(
+    private orderRepository: OrderRepository,       // Port
+    private paymentGateway: PaymentGateway          // Port (external service)
+  ) {}
+
+  async execute(orderId: string, paymentMethod: string): Promise<void> {
+    const order = await this.orderRepository.findById(Id.create(orderId));
+    if (!order) throw new Error('Order not found');
+
+    const shippingCost = calculateShippingCost(order, order.destination);
+    const total = order.calculateTotal().add(shippingCost);
+
+    await this.paymentGateway.charge(total, paymentMethod);
+    order.markAsPaid();
+    await this.orderRepository.save(order);
+  }
+}
+```
+
+## Return Values
+
+Use cases return domain objects. The caller is responsible for mapping to response format.
+
+```typescript
+class GetOrderUseCase {
+  constructor(private orderRepository: OrderRepository) {}
+
+  async execute(orderId: string): Promise<Order> {
+    const order = await this.orderRepository.findById(Id.create(orderId));
+    if (!order) throw new Error('Order not found');
+    return order;
+  }
+}
+
+// In controller
+const order = await getOrderUseCase.execute(req.params.id);
+res.json(order.toPrimitives());
+```
+
+## Non-Negotiable Rules
+
+### ❌ I will NEVER:
+1. Call another UseCase from a UseCase
+2. Import a UseCase from another module
+3. Put business logic in the use case (delegate to domain)
+4. Have multiple public methods (only `execute`)
+5. Depend on infrastructure directly (use ports)
+
+### ✅ I will ALWAYS:
+1. Have a single `execute` method with primitive parameters (or Request DTO if more than 3 params)
+2. Use dependency injection for ports
+3. Import domain service functions for business logic
+4. Keep use cases thin (orchestration only)
+5. Name use cases with the `UseCase` suffix
+6. Create value objects inside the use case from primitive parameters

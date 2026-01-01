@@ -1,0 +1,81 @@
+---
+description: Rules for shared package types
+globs: ["shared/**/*.ts"]
+alwaysApply: false
+---
+
+# Shared Package
+
+The `shared` package contains types and utilities shared between backend and frontend.
+
+## Structure
+
+```
+shared/
+├── src/
+│   ├── api/           # API Request/Response types
+│   │   ├── auth.ts
+│   │   └── health.ts
+│   └── domain/        # Domain utilities
+│       ├── Maybe.ts
+│       └── DomainError.ts
+└── tests/
+```
+
+## Dependency Rules
+
+- `shared` **CANNOT import** from `backend` or `frontend`
+- `shared` is a dependency of both: `backend` and `frontend`
+
+## API Types
+
+API types define the shape of HTTP requests and responses:
+
+```typescript
+// Only primitive types
+export interface LoginRequest {
+  email: string;
+}
+
+export interface AuthResponse {
+  token: string;
+  user: UserDTO;
+}
+```
+
+### Characteristics
+
+- **Primitives only**: string, number, boolean, arrays, nested objects
+- **No domain types**: No Money, no Id, no entities
+- **Serializable**: Can be JSON.stringify'd directly
+
+## Domain Utilities
+
+- **Maybe<T>**: Monadic type for optional values
+- **DomainError**: Error class with factory methods
+
+## No Barrel Files
+
+Do not use `index.ts` files for re-exports. Import directly from each file:
+
+```typescript
+// ✅ GOOD
+import { Maybe } from '@email-login/shared/src/domain/Maybe';
+import { LoginRequest } from '@email-login/shared/src/api/auth';
+
+// ❌ BAD
+import { Maybe, LoginRequest } from '@email-login/shared';
+```
+
+## Non-Negotiable Rules
+
+### ❌ NEVER:
+1. Import from backend or frontend
+2. Use domain types (entities, value objects) in api/
+3. Create barrel files (index.ts)
+4. Add business logic (only types and generic utilities)
+
+### ✅ ALWAYS:
+1. Use only primitives in API types
+2. Keep Maybe and DomainError as the only domain utilities
+3. Import directly from each file
