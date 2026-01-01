@@ -16,4 +16,11 @@ describe('The UserRole', () => {
 
     expect(role.value).toBe('student');
   });
+
+  // TODO: creates an admin role
+  it('creates an admin role', () => {
+    const role = UserRole.create('admin');
+
+    expect(role.value).toBe('admin');
+  });
 });
