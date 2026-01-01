@@ -3,7 +3,7 @@ WORKDIR /app
 COPY package*.json ./
 COPY common ./common
 COPY frontend ./frontend
-RUN npm ci --workspace=@app/common --workspace=@app/frontend
+RUN npm ci --workspace=@app/common --workspace=@app/frontend --ignore-scripts
 RUN npm run build -w @app/frontend
 
 FROM nginx:alpine
