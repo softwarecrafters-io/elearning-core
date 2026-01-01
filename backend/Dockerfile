@@ -16,7 +16,6 @@ COPY common ./common
 COPY backend/package*.json ./backend/
 RUN npm ci --workspace=@app/common --workspace=@app/backend --omit=dev --ignore-scripts
 COPY --from=builder /app/backend/lib ./backend/lib
-COPY --from=builder /app/common/src ./common/src
 EXPOSE 3000
 USER node
 CMD ["node", "backend/lib/main.js"]
