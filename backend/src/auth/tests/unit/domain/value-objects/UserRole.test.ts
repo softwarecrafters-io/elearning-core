@@ -1,16 +1,6 @@
 import { UserRole } from '../../../../domain/value-objects/UserRole';
 
 describe('The UserRole', () => {
-  // TODO: creates a student role
-  // TODO: creates an admin role
-  // TODO: rejects invalid role value
-  // TODO: equals returns true for same role
-  // TODO: equals returns false for different roles
-  // TODO: isAdmin returns true for admin
-  // TODO: isAdmin returns false for student
-  // TODO: isStudent returns true for student
-  // TODO: isStudent returns false for admin
-
   it('creates a student role', () => {
     const role = UserRole.create('student');
 
@@ -27,39 +17,39 @@ describe('The UserRole', () => {
     expect(() => UserRole.create('superadmin')).toThrow('Invalid role');
   });
 
-  it('equals returns true for same role', () => {
+  it('considers two roles with same value as equal', () => {
     const role1 = UserRole.create('admin');
     const role2 = UserRole.create('admin');
 
     expect(role1.equals(role2)).toBe(true);
   });
 
-  it('equals returns false for different roles', () => {
+  it('considers two roles with different values as not equal', () => {
     const admin = UserRole.create('admin');
     const student = UserRole.create('student');
 
     expect(admin.equals(student)).toBe(false);
   });
 
-  it('isAdmin returns true for admin', () => {
+  it('identifies admin role correctly', () => {
     const role = UserRole.create('admin');
 
     expect(role.isAdmin()).toBe(true);
   });
 
-  it('isAdmin returns false for student', () => {
+  it('does not identify student as admin', () => {
     const role = UserRole.create('student');
 
     expect(role.isAdmin()).toBe(false);
   });
 
-  it('isStudent returns true for student', () => {
+  it('identifies student role correctly', () => {
     const role = UserRole.create('student');
 
     expect(role.isStudent()).toBe(true);
   });
 
-  it('isStudent returns false for admin', () => {
+  it('does not identify admin as student', () => {
     const role = UserRole.create('admin');
 
     expect(role.isStudent()).toBe(false);
