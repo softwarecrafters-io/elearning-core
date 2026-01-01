@@ -1,0 +1,79 @@
+# Git Strategy
+
+## Branches
+
+- NEVER work directly on `master`
+- ALWAYS create feature branch from `master`
+- Naming: `feat/short-description`, `fix/short-description`, `refactor/short-description`
+
+## Commits
+
+### Conventional Commits format (concise)
+- `feat: short description`
+- `fix: short description`
+- `refactor: short description`
+- `test: short description`
+- `docs: short description`
+- `chore: short description`
+
+### Special TDD commit
+- `green: descriptive test name`
+- Commit every time a test turns green
+
+### Rules
+- Commit with EVERY green test
+- Concise messages (max 50 characters ideally)
+- ALWAYS write commit messages in English
+- NEVER use --no-verify to skip hooks
+
+## Hooks (NEVER skip)
+
+### Pre-commit (already configured)
+- lint-staged (ESLint + Prettier)
+- npm run compile (TypeScript)
+
+### Pre-push (already configured)
+- npm run validate (compile + all tests)
+
+## Pull Requests
+
+### Create PR
+```bash
+gh pr create --base master --title "feat: description" --body "Detailed description"
+```
+
+### Read Tech Lead feedback
+```bash
+# View general comments
+gh pr view <number> --comments
+
+# View inline code comments
+gh api repos/{owner}/{repo}/pulls/<number>/comments
+```
+
+### Workflow
+
+1. Create feature branch from master
+2. Develop with TDD (commit on each green)
+3. Push (validated by hooks)
+4. Create PR with gh
+5. Wait for Tech Lead feedback
+6. When told "review-pr", read comments with gh
+7. Apply changes and push
+8. Tech Lead approves and merges
+
+## Commands
+
+### `review-pr`
+
+When the Tech Lead writes `review-pr`, I must:
+
+1. Get current branch name: `git branch --show-current`
+2. Find the open PR for that branch: `gh pr list --head <branch> --json number,url`
+3. Read general PR comments: `gh pr view <number> --comments`
+4. Read inline code review comments: `gh api repos/{owner}/{repo}/pulls/<number>/comments`
+5. Summarize the feedback received
+6. Apply the requested changes
+7. Commit and push the fixes
+
+If the Tech Lead specifies a PR number (`review-pr #123`), use that number directly instead of searching by branch.
