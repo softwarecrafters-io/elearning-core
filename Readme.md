@@ -47,19 +47,30 @@ npm start
 - Frontend: http://localhost:5173
 - Backend: http://localhost:3000
 
-### Docker Compose
+### Docker Compose (Local)
 
 ```bash
 # Configure environment
-export MONGO_URI=mongodb://mongo:27017/app
+export MONGO_URI=mongodb://localhost:27017/app
 export JWT_SECRET=your-secret-key
 
 # Build and run
-docker-compose up --build
+docker compose up --build
 ```
 
-- Frontend: http://localhost:80
-- Backend: http://localhost:3000
+- Frontend: http://localhost:3000
+
+### Docker Compose (Production - Dokploy)
+
+For deployment with [Dokploy](https://dokploy.com/), use the production compose file:
+
+```bash
+# In Dokploy, configure:
+# - Compose Path: docker-compose.prod.yml
+# - Environment Variables: MONGO_URI, JWT_SECRET
+```
+
+The production file uses `dokploy-network` (external) to communicate with other Dokploy services like MongoDB.
 
 ---
 
