@@ -381,6 +381,121 @@ Architecture and coding standards are defined in `.cursor/rules/`. Key principle
 
 ---
 
+## Git Strategy
+
+This project uses a PR-based workflow with branch protection. An AI agent (`softwarecrafters-agent`) creates PRs that must be reviewed by the Tech Lead (`softwarecrafters-io`).
+
+### Branch Model
+
+```
+feature branch → PR → master
+```
+
+- **master**: Protected branch, requires PR with 1 approval
+- **Feature branches**: `feat/`, `fix/`, `refactor/` from master
+
+### Commit Convention
+
+Conventional Commits (concise) + special TDD commit:
+
+| Type | Description |
+|------|-------------|
+| `feat:` | New feature |
+| `fix:` | Bug fix |
+| `refactor:` | Code refactoring |
+| `test:` | Test changes |
+| `docs:` | Documentation |
+| `chore:` | Maintenance |
+| `green:` | Test passes (TDD) |
+
+**Rules**:
+- Commit on every green test
+- Messages in English
+- Max 50 characters
+
+### Git Hooks (Husky)
+
+| Hook | Validations |
+|------|-------------|
+| `pre-commit` | lint-staged (ESLint + Prettier), TypeScript compile |
+| `pre-push` | Full test suite (compile + all tests) |
+
+**Never skip hooks** with `--no-verify`.
+
+### GitHub Accounts Setup
+
+Two GitHub accounts are used:
+
+| Account | Role | Purpose |
+|---------|------|---------|
+| `softwarecrafters-agent` | Agent | Creates branches, commits, PRs |
+| `softwarecrafters-io` | Tech Lead | Reviews, approves, merges PRs |
+
+### Initial Setup
+
+1. **Install GitHub CLI**:
+   ```bash
+   brew install gh
+   ```
+
+2. **Authenticate as agent** (use HTTPS, not SSH to avoid key conflicts):
+   ```bash
+   gh auth login
+   # → GitHub.com → HTTPS → Login with browser
+   # Login with softwarecrafters-agent account
+   ```
+
+3. **Configure git user for agent**:
+   ```bash
+   git config user.name "softwarecrafters-agent"
+   git config user.email "agent@softwarecrafters.io"
+   ```
+
+4. **Branch protection** (already configured):
+   - master requires PR with 1 approval
+   - No bypass allowed
+
+### PR Workflow
+
+```mermaid
+sequenceDiagram
+    participant Agent as Agent
+    participant GH as GitHub
+    participant TL as Tech Lead
+    
+    Agent->>Agent: Create feature branch
+    Agent->>Agent: TDD (commit on green)
+    Agent->>GH: Push + Create PR
+    GH->>TL: Email notification
+    TL->>GH: Review + comments
+    TL->>Agent: "review-pr" in Cursor
+    Agent->>GH: Read comments via gh cli
+    Agent->>GH: Apply fixes + push
+    TL->>GH: Approve + merge
+```
+
+### Agent Commands
+
+| Command | Action |
+|---------|--------|
+| `review-pr` | Agent reads PR comments and applies fixes |
+| `review-pr #123` | Agent reviews specific PR number |
+
+### Useful gh Commands
+
+```bash
+# Create PR with reviewer
+gh pr create --base master --title "feat: description" --reviewer softwarecrafters-io
+
+# View PR comments
+gh pr view <number> --comments
+
+# View inline code comments
+gh api repos/softwarecrafters-io/elearning-core/pulls/<number>/comments
+```
+
+---
+
 ## License
 
 MIT

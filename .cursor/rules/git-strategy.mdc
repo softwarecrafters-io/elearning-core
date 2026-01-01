@@ -39,8 +39,10 @@
 
 ### Create PR
 ```bash
-gh pr create --base master --title "feat: description" --body "Detailed description"
+gh pr create --base master --title "feat: description" --body "Detailed description" --reviewer softwarecrafters-io
 ```
+
+**Important**: ALWAYS add `--reviewer softwarecrafters-io` to notify the Tech Lead via email.
 
 ### Read Tech Lead feedback
 ```bash
