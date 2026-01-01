@@ -58,80 +58,13 @@ gh api repos/{owner}/{repo}/pulls/<number>/comments
 1. Create feature branch from master
 2. Develop with TDD (commit on each green)
 3. Push (validated by hooks)
-4. Create PR with gh
+4. Create PR with `pr-create` command
 5. Wait for Tech Lead feedback
-6. When told "review-pr", read comments with gh
-7. Apply changes and push
-8. Tech Lead approves and merges
+6. When told `pr-review`, read comments and apply changes
+7. Tech Lead approves and merges
 
 ## Commands
 
-### `create-pr`
-
-When the Tech Lead writes `create-pr`, I must:
-
-1. **Verify branch** is not `master`:
-   ```bash
-   git branch --show-current
-   ```
-
-2. **Push branch** to origin (hooks will validate):
-   ```bash
-   git push -u origin <branch>
-   ```
-
-3. **Determine PR type** from branch name:
-   - `feat/...` → title prefix `feat:`
-   - `fix/...` → title prefix `fix:`
-   - `refactor/...` → title prefix `refactor:`
-   - `docs/...` → title prefix `docs:`
-   - `chore/...` → title prefix `chore:`
-
-4. **Create PR** with reviewer:
-   ```bash
-   gh pr create --base master --title "<type>: <description>" --body "<detailed description>" --reviewer softwarecrafters-io
-   ```
-
-5. **Report PR URL** to Tech Lead
-
-If Tech Lead provides a description (`create-pr add user authentication`), use it in the title.
-
----
-
-### `pr-review`
-
-When the Tech Lead writes `pr-review`, I must:
-
-1. **Read PR feedback**:
-   - Get current branch: `git branch --show-current`
-   - Find open PR: `gh pr list --head <branch> --json number,url`
-   - Read general comments: `gh pr view <number> --comments`
-   - Read inline code comments: `gh api repos/softwarecrafters-io/elearning-core/pulls/<number>/comments`
-
-2. **Review architecture rules** before making changes:
-   - @.cursor/rules/architecture-domain-value-objects.mdc
-   - @.cursor/rules/architecture-domain-entities.mdc
-   - @.cursor/rules/architecture-domain-repositories.mdc
-   - @.cursor/rules/architecture-application-usecases.mdc
-   - @.cursor/rules/architecture-application-dtos.mdc
-   - @.cursor/rules/design-naming.mdc
-   - @.cursor/rules/design-functions.mdc
-   - @.cursor/rules/design-classes-modules.mdc
-   - @.cursor/rules/design-errors.mdc
-   - @.cursor/rules/practices-testing.mdc
-   - @.cursor/rules/practices-tdd.mdc
-
-3. **Summarize feedback** received from Tech Lead
-
-4. **Apply changes** following:
-   - Architecture rules from step 2
-   - Tech Lead comments from step 1
-   - TDD practices (if changes require new tests)
-
-5. **Commit and push** the fixes with appropriate commit message
-
-If the Tech Lead specifies a PR number (`pr-review #123`), use that number directly.
-
-### `pr-review` with context
-
-If Tech Lead mentions a specific file, line, or concern alongside `pr-review`, focus on that area first while still reviewing all comments.
+See `.cursor/commands/` for available commands:
+- `pr-create` - Push and create PR with reviewer
+- `pr-review` - Read feedback and apply changes
