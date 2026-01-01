@@ -8,7 +8,7 @@ function getDefaultBaseUrl(): string {
   if (typeof process !== 'undefined' && process.env?.TEST_BACKEND_URL) {
     return process.env.TEST_BACKEND_URL;
   }
-  return import.meta.env.VITE_API_URL || '/api';
+  return '/api';
 }
 
 export class HttpClient {
