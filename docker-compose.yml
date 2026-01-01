@@ -6,12 +6,20 @@ services:
     environment:
       - MONGO_URI=${MONGO_URI}
       - JWT_SECRET=${JWT_SECRET}
+    networks:
+      - app-network
     restart: unless-stopped
 
   frontend:
     build:
       context: .
       dockerfile: frontend/Dockerfile
+    networks:
+      - app-network
     depends_on:
       - backend
     restart: unless-stopped
+
+networks:
+  app-network:
+    driver: bridge
