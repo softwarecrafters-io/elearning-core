@@ -13,5 +13,6 @@ describe('The GetProfileUseCase', () => {
     expect(profile.id).toBe('user-123');
     expect(profile.email).toBe('test@example.com');
     expect(profile.name).toBe('John Doe');
+    expect(profile.role).toBe('student');
   });
 });
