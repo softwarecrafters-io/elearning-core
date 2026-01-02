@@ -31,16 +31,17 @@ describe('The User', () => {
     expect(user.id).toBeDefined();
   });
 
-  it('preserves id when reconstituted', () => {
+  it('preserves all attributes when reconstituted', () => {
     const id = Id.create('user-123');
     const email = Email.create('test@example.com');
     const name = 'John Doe';
-    const role = UserRole.create('student');
+    const role = UserRole.create('admin');
 
     const user = User.reconstitute(id, email, name, role);
 
     expect(user.id.equals(id)).toBe(true);
     expect(user.getName()).toBe(name);
+    expect(user.role.isAdmin()).toBe(true);
   });
 
   it('considers two users with same id as equal', () => {
