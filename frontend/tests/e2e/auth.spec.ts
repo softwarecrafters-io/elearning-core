@@ -3,14 +3,16 @@ import { Routes } from '../../src/shared/infrastructure/ui/routes';
 import { testOTP } from '../../playwright.config';
 
 const backendUrl = 'http://localhost:3002';
+const webhookSecret = 'test-webhook-secret';
 
 async function registerUser(
   request: typeof test extends (args: infer T) => void ? T : never,
   email: string,
   name: string
 ) {
-  await request.post(`${backendUrl}/auth/register`, {
+  await request.post(`${backendUrl}/webhooks/users`, {
     data: { email, name },
+    headers: { 'X-Webhook-Secret': webhookSecret },
   });
 }
 
