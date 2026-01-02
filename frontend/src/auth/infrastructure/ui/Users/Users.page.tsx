@@ -1,14 +1,14 @@
-import { AdminUsers } from './AdminUsers';
+import { Users } from './Users';
 import { Factory } from '../../../../shared/infrastructure/factory';
 
-export function AdminUsersPage() {
+export function UsersPage() {
   const listUsersUseCase = Factory.createListUsersUseCase();
   const createUserUseCase = Factory.createAdminCreateUserUseCase();
   const updateUserUseCase = Factory.createAdminUpdateUserUseCase();
   const deleteUserUseCase = Factory.createAdminDeleteUserUseCase();
 
   return (
-    <AdminUsers
+    <Users
       listUsersUseCase={listUsersUseCase}
       createUserUseCase={createUserUseCase}
       updateUserUseCase={updateUserUseCase}

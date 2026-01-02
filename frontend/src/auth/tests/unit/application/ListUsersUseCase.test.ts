@@ -2,8 +2,6 @@ import { ListUsersUseCase } from '../../../application/ListUsersUseCase';
 import { InMemoryAdminRepository } from '../../../domain/repositories/AdminRepository';
 import { User } from '../../../domain/entities/User';
 
-// DONE: returns list of users as DTOs
-
 describe('The ListUsersUseCase', () => {
   it('returns list of users as DTOs', async () => {
     const users = [

@@ -2,8 +2,6 @@ import { AdminDeleteUserUseCase } from '../../../application/AdminDeleteUserUseC
 import { InMemoryAdminRepository } from '../../../domain/repositories/AdminRepository';
 import { User } from '../../../domain/entities/User';
 
-// DONE: deletes user
-
 describe('The AdminDeleteUserUseCase', () => {
   it('deletes user', async () => {
     const users = [User.create('user-1', 'a@test.com', 'Alice', 'student')];

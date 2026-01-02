@@ -1,8 +1,6 @@
 import { AdminCreateUserUseCase } from '../../../application/AdminCreateUserUseCase';
 import { InMemoryAdminRepository } from '../../../domain/repositories/AdminRepository';
 
-// DONE: creates user and returns DTO
-
 describe('The AdminCreateUserUseCase', () => {
   it('creates user and returns DTO', async () => {
     const repository = new InMemoryAdminRepository();

@@ -3,8 +3,6 @@ import { InMemoryUserRepository } from '../../../domain/repositories/UserReposit
 import { User } from '../../../domain/entities/User';
 import { Email } from '../../../domain/value-objects/Email';
 
-// DONE: returns all users as DTOs
-
 describe('The ListUsersUseCase', () => {
   it('returns all users as DTOs', async () => {
     const users = [User.create(Email.create('a@test.com'), 'Alice'), User.create(Email.create('b@test.com'), 'Bob')];

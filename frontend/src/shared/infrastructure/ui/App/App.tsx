@@ -4,7 +4,7 @@ import { HealthPage } from '../../../../health/infrastructure/ui/Health/Health.p
 import { LoginPage } from '../../../../auth/infrastructure/ui/Login/Login.page';
 import { VerifyOTPPage } from '../../../../auth/infrastructure/ui/VerifyOTP/VerifyOTP.page';
 import { ProfilePage } from '../../../../auth/infrastructure/ui/Profile/Profile.page';
-import { AdminUsersPage } from '../../../../auth/infrastructure/ui/Admin/AdminUsers.page';
+import { UsersPage } from '../../../../auth/infrastructure/ui/Users/Users.page';
 import { ProtectedRoute } from '../ProtectedRoute/ProtectedRoute';
 import { ProtectedAdminRoute } from '../ProtectedAdminRoute/ProtectedAdminRoute';
 import { HomePage } from '../Home/Home.page';
@@ -48,7 +48,7 @@ function AppRoutes() {
           path={Routes.AdminUsers}
           element={
             <ProtectedAdminRoute>
-              <AdminUsersPage />
+              <UsersPage />
             </ProtectedAdminRoute>
           }
         />

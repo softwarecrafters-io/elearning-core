@@ -2,8 +2,6 @@ import { AdminUpdateUserUseCase } from '../../../application/AdminUpdateUserUseC
 import { InMemoryAdminRepository } from '../../../domain/repositories/AdminRepository';
 import { User } from '../../../domain/entities/User';
 
-// DONE: updates user name
-
 describe('The AdminUpdateUserUseCase', () => {
   it('updates user name', async () => {
     const users = [User.create('user-1', 'a@test.com', 'Alice', 'student')];

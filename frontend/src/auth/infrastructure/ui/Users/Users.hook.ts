@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { Maybe } from '@app/common/src/domain/Maybe';
 import type { ListUsersUseCase } from '../../../application/ListUsersUseCase';
 import type { AdminCreateUserUseCase } from '../../../application/AdminCreateUserUseCase';
@@ -6,7 +6,7 @@ import type { AdminUpdateUserUseCase } from '../../../application/AdminUpdateUse
 import type { AdminDeleteUserUseCase } from '../../../application/AdminDeleteUserUseCase';
 import type { UserDTO } from '../../../application/AuthDTO';
 
-interface AdminUsersState {
+interface UsersState {
   users: UserDTO[];
   loading: boolean;
   error: Maybe<Error>;
@@ -17,7 +17,7 @@ interface AdminUsersState {
   showCreateForm: boolean;
 }
 
-const initialState: AdminUsersState = {
+const initialState: UsersState = {
   users: [],
   loading: false,
   error: Maybe.none(),
@@ -28,15 +28,15 @@ const initialState: AdminUsersState = {
   showCreateForm: false,
 };
 
-export function useAdminUsers(
+export function useUsers(
   listUsersUseCase: ListUsersUseCase,
   createUserUseCase: AdminCreateUserUseCase,
   updateUserUseCase: AdminUpdateUserUseCase,
   deleteUserUseCase: AdminDeleteUserUseCase
 ) {
-  const [state, setState] = useState<AdminUsersState>(initialState);
+  const [state, setState] = useState<UsersState>(initialState);
 
-  const loadUsers = useCallback(async () => {
+  const loadUsers = async () => {
     setState((s) => ({ ...s, loading: true, error: Maybe.none() }));
     try {
       const users = await listUsersUseCase.execute();
@@ -44,7 +44,7 @@ export function useAdminUsers(
     } catch (error) {
       setState((s) => ({ ...s, loading: false, error: Maybe.some(error as Error) }));
     }
-  }, [listUsersUseCase]);
+  };
 
   const createUser = async () => {
     if (!state.newUserEmail.trim()) return;
