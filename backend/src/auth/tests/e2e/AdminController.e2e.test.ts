@@ -46,4 +46,48 @@ describe('The Admin API', () => {
     expect(response.body.role).toBe('student');
     expect(response.body.id).toBeDefined();
   });
+
+  it('returns 401 without token', async () => {
+    const response = await request(server)
+      .post(ApiRoutes.Admin.Users)
+      .send({ email: 'student@example.com', name: 'Student User' });
+
+    expect(response.status).toBe(401);
+  });
+
+  it('returns 403 if user is not admin', async () => {
+    const adminToken = await getAdminToken();
+    await request(server)
+      .post(ApiRoutes.Admin.Users)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ email: 'student@example.com', name: 'Student User' });
+    await request(server).post(ApiRoutes.Auth.Login).send({ email: 'student@example.com' });
+    const studentOtp = await getOtpForEmail('student@example.com');
+    const studentLoginResponse = await request(server)
+      .post(ApiRoutes.Auth.Verify)
+      .send({ email: 'student@example.com', code: studentOtp });
+    const studentToken = studentLoginResponse.body.accessToken;
+
+    const response = await request(server)
+      .post(ApiRoutes.Admin.Users)
+      .set('Authorization', `Bearer ${studentToken}`)
+      .send({ email: 'another@example.com', name: 'Another User' });
+
+    expect(response.status).toBe(403);
+  });
+
+  it('returns 422 if user already exists', async () => {
+    const adminToken = await getAdminToken();
+    await request(server)
+      .post(ApiRoutes.Admin.Users)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ email: 'student@example.com', name: 'Student User' });
+
+    const response = await request(server)
+      .post(ApiRoutes.Admin.Users)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ email: 'student@example.com', name: 'Duplicate User' });
+
+    expect(response.status).toBe(422);
+  });
 });
