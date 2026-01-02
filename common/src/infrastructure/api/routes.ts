@@ -9,4 +9,10 @@ export const ApiRoutes = {
   Profile: {
     Me: '/profile/me',
   },
+  Admin: {
+    Users: '/admin/users',
+  },
+  Webhooks: {
+    Users: '/webhooks/users',
+  },
 } as const;
