@@ -6,7 +6,7 @@ import { Email } from '../../../domain/value-objects/Email';
 import { EmailSender } from '../../../application/ports/EmailSender';
 import { RandomOTPGenerator } from '../../../application/ports/OTPGenerator';
 
-describe('The Login Request', () => {
+describe('The RequestLoginUseCase', () => {
   it('initiates login and sends OTP for registered user', async () => {
     const userRepository = new InMemoryUserRepository();
     const loginAttemptRepository = new InMemoryLoginAttemptRepository();

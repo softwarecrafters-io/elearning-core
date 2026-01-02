@@ -12,11 +12,12 @@ export class CreateUserUseCase {
     email: string,
     name: string
   ): Promise<{ id: string; email: string; name: string; role: string }> {
-    const creator = await this.userRepository.findById(Id.create(creatorId));
-    if (creator.isNone()) {
+    const maybeCreator = await this.userRepository.findById(Id.create(creatorId));
+    if (maybeCreator.isNone()) {
       throw DomainError.createNotFound('Creator not found');
     }
-    if (!creator.getOrThrow(new Error('Creator not found')).isAdmin()) {
+    const creator = maybeCreator.getOrThrow();
+    if (!creator.isAdmin()) {
       throw DomainError.createValidation('Only admins can create users');
     }
     const emailVO = Email.create(email);
