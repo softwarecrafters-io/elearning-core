@@ -1,20 +1,13 @@
 import { User } from '../../../domain/entities/User';
-import { InMemoryAdminRepository } from '../../../domain/repositories/AdminRepository';
+import { InMemoryUserManagementRepository } from '../../../domain/repositories/UserManagementRepository';
 
-// DONE: lists all users
-// DONE: creates a new user
-// DONE: updates user name
-// DONE: deletes a user
-// DONE: throws error when updating non-existent user
-// DONE: throws error when deleting non-existent user
-
-describe('The InMemoryAdminRepository', () => {
+describe('The InMemoryUserManagementRepository', () => {
   it('lists all users', async () => {
     const users = [
       User.create('user-1', 'a@test.com', 'Alice', 'student'),
       User.create('user-2', 'b@test.com', 'Bob', 'admin'),
     ];
-    const repository = new InMemoryAdminRepository(users);
+    const repository = new InMemoryUserManagementRepository(users);
 
     const result = await repository.listUsers();
 
@@ -24,7 +17,7 @@ describe('The InMemoryAdminRepository', () => {
   });
 
   it('creates a new user', async () => {
-    const repository = new InMemoryAdminRepository();
+    const repository = new InMemoryUserManagementRepository();
 
     const user = await repository.createUser('new@test.com', 'New User');
 
@@ -37,7 +30,7 @@ describe('The InMemoryAdminRepository', () => {
 
   it('updates user name', async () => {
     const users = [User.create('user-1', 'a@test.com', 'Alice', 'student')];
-    const repository = new InMemoryAdminRepository(users);
+    const repository = new InMemoryUserManagementRepository(users);
 
     const updated = await repository.updateUser('user-1', 'Alice Updated');
 
@@ -47,7 +40,7 @@ describe('The InMemoryAdminRepository', () => {
 
   it('deletes a user', async () => {
     const users = [User.create('user-1', 'a@test.com', 'Alice', 'student')];
-    const repository = new InMemoryAdminRepository(users);
+    const repository = new InMemoryUserManagementRepository(users);
 
     await repository.deleteUser('user-1');
 
@@ -56,13 +49,13 @@ describe('The InMemoryAdminRepository', () => {
   });
 
   it('throws error when updating non-existent user', async () => {
-    const repository = new InMemoryAdminRepository();
+    const repository = new InMemoryUserManagementRepository();
 
     await expect(repository.updateUser('non-existent', 'Name')).rejects.toThrow('User non-existent not found');
   });
 
   it('throws error when deleting non-existent user', async () => {
-    const repository = new InMemoryAdminRepository();
+    const repository = new InMemoryUserManagementRepository();
 
     await expect(repository.deleteUser('non-existent')).rejects.toThrow('User non-existent not found');
   });

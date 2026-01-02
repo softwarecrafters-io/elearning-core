@@ -1,13 +1,13 @@
 import { User } from '../entities/User';
 
-export interface AdminRepository {
+export interface UserManagementRepository {
   listUsers(): Promise<User[]>;
   createUser(email: string, name: string): Promise<User>;
   updateUser(id: string, name: string): Promise<User>;
   deleteUser(id: string): Promise<void>;
 }
 
-export class InMemoryAdminRepository implements AdminRepository {
+export class InMemoryUserManagementRepository implements UserManagementRepository {
   constructor(private users: User[] = []) {}
 
   async listUsers(): Promise<User[]> {

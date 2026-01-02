@@ -1,11 +1,5 @@
 import { User } from '../../../domain/entities/User';
 
-// DONE: creates a user with id, email and name
-// DONE: updates name preserving id and email
-// DONE: creates user with role
-// DONE: isAdmin returns true for admin role
-// DONE: isAdmin returns false for student role
-
 describe('The User', () => {
   it('creates a user with id, email and name', () => {
     const user = User.create('user-123', 'test@example.com', 'John Doe', 'student');

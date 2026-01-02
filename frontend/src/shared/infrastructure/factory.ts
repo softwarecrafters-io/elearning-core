@@ -5,8 +5,8 @@ import type { AuthGateway } from '../../auth/application/ports/AuthGateway';
 import { HttpAuthGateway } from '../../auth/infrastructure/adapters/HttpAuthGateway';
 import type { ProfileRepository } from '../../auth/domain/repositories/ProfileRepository';
 import { HttpProfileRepository } from '../../auth/infrastructure/adapters/HttpProfileRepository';
-import type { AdminRepository } from '../../auth/domain/repositories/AdminRepository';
-import { HttpAdminRepository } from '../../auth/infrastructure/adapters/HttpAdminRepository';
+import type { UserManagementRepository } from '../../auth/domain/repositories/UserManagementRepository';
+import { HttpUserManagementRepository } from '../../auth/infrastructure/adapters/HttpUserManagementRepository';
 import type { TokenStorage } from '../../auth/application/ports/TokenStorage';
 import { LocalStorageTokenStorage } from '../../auth/infrastructure/adapters/LocalStorageTokenStorage';
 import type { SessionGateway } from '../../auth/application/ports/SessionGateway';
@@ -30,7 +30,7 @@ export class Factory {
   private static healthRepository: HealthRepository;
   private static authGateway: AuthGateway;
   private static profileRepository: ProfileRepository;
-  private static adminRepository: AdminRepository;
+  private static userManagementRepository: UserManagementRepository;
   private static tokenStorage: TokenStorage;
   private static sessionGateway: SessionGateway;
   private static authenticatedHttpClient: AuthenticatedHttpClient;
@@ -82,11 +82,11 @@ export class Factory {
     return this.profileRepository;
   }
 
-  private static getAdminRepository(): AdminRepository {
-    if (!this.adminRepository) {
-      this.adminRepository = new HttpAdminRepository(this.getAuthenticatedHttpClient());
+  private static getUserManagementRepository(): UserManagementRepository {
+    if (!this.userManagementRepository) {
+      this.userManagementRepository = new HttpUserManagementRepository(this.getAuthenticatedHttpClient());
     }
-    return this.adminRepository;
+    return this.userManagementRepository;
   }
 
   static createTokenStorage(): TokenStorage {
@@ -135,18 +135,18 @@ export class Factory {
   }
 
   static createListUsersUseCase(): ListUsersUseCase {
-    return new ListUsersUseCase(this.getAdminRepository());
+    return new ListUsersUseCase(this.getUserManagementRepository());
   }
 
   static createAdminCreateUserUseCase(): AdminCreateUserUseCase {
-    return new AdminCreateUserUseCase(this.getAdminRepository());
+    return new AdminCreateUserUseCase(this.getUserManagementRepository());
   }
 
   static createAdminUpdateUserUseCase(): AdminUpdateUserUseCase {
-    return new AdminUpdateUserUseCase(this.getAdminRepository());
+    return new AdminUpdateUserUseCase(this.getUserManagementRepository());
   }
 
   static createAdminDeleteUserUseCase(): AdminDeleteUserUseCase {
-    return new AdminDeleteUserUseCase(this.getAdminRepository());
+    return new AdminDeleteUserUseCase(this.getUserManagementRepository());
   }
 }

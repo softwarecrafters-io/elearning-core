@@ -1,9 +1,9 @@
-import type { AdminRepository } from '../domain/repositories/AdminRepository';
+import type { UserManagementRepository } from '../domain/repositories/UserManagementRepository';
 
 export class AdminDeleteUserUseCase {
-  constructor(private adminRepository: AdminRepository) {}
+  constructor(private userManagementRepository: UserManagementRepository) {}
 
   async execute(id: string): Promise<void> {
-    await this.adminRepository.deleteUser(id);
+    await this.userManagementRepository.deleteUser(id);
   }
 }

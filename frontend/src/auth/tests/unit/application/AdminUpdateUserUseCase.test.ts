@@ -1,11 +1,11 @@
 import { AdminUpdateUserUseCase } from '../../../application/AdminUpdateUserUseCase';
-import { InMemoryAdminRepository } from '../../../domain/repositories/AdminRepository';
+import { InMemoryUserManagementRepository } from '../../../domain/repositories/UserManagementRepository';
 import { User } from '../../../domain/entities/User';
 
 describe('The AdminUpdateUserUseCase', () => {
   it('updates user name', async () => {
     const users = [User.create('user-1', 'a@test.com', 'Alice', 'student')];
-    const repository = new InMemoryAdminRepository(users);
+    const repository = new InMemoryUserManagementRepository(users);
     const useCase = new AdminUpdateUserUseCase(repository);
 
     const result = await useCase.execute('user-1', 'Alice Updated');

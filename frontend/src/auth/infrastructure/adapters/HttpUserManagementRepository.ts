@@ -1,10 +1,10 @@
-import type { AdminRepository } from '../../domain/repositories/AdminRepository';
+import type { UserManagementRepository } from '../../domain/repositories/UserManagementRepository';
 import { User } from '../../domain/entities/User';
 import { AuthenticatedHttpClient } from '../../../shared/infrastructure/http/AuthenticatedHttpClient';
 import { ApiRoutes } from '@app/common/src/infrastructure/api/routes';
 import type { UserDTO } from '@app/common/src/infrastructure/api/auth';
 
-export class HttpAdminRepository implements AdminRepository {
+export class HttpUserManagementRepository implements UserManagementRepository {
   constructor(private authenticatedClient: AuthenticatedHttpClient) {}
 
   async listUsers(): Promise<User[]> {

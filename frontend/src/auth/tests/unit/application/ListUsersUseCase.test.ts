@@ -1,5 +1,5 @@
 import { ListUsersUseCase } from '../../../application/ListUsersUseCase';
-import { InMemoryAdminRepository } from '../../../domain/repositories/AdminRepository';
+import { InMemoryUserManagementRepository } from '../../../domain/repositories/UserManagementRepository';
 import { User } from '../../../domain/entities/User';
 
 describe('The ListUsersUseCase', () => {
@@ -8,7 +8,7 @@ describe('The ListUsersUseCase', () => {
       User.create('user-1', 'a@test.com', 'Alice', 'student'),
       User.create('user-2', 'b@test.com', 'Bob', 'admin'),
     ];
-    const repository = new InMemoryAdminRepository(users);
+    const repository = new InMemoryUserManagementRepository(users);
     const useCase = new ListUsersUseCase(repository);
 
     const result = await useCase.execute();
