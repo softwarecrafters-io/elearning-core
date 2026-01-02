@@ -55,7 +55,7 @@ export class MongoUserRepository implements UserRepository {
       Id.create(document._id),
       Email.create(document.email),
       document.name,
-      UserRole.create(document.role)
+      UserRole.create(document.role || 'student')
     );
   }
 }

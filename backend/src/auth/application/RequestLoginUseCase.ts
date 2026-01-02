@@ -20,7 +20,7 @@ export class RequestLoginUseCase {
     const emailVO = Email.create(email);
     let user = await this.userRepository.findByEmail(emailVO);
     if (user.isNone()) {
-      if (this.adminEmail && email === this.adminEmail) {
+      if (this.adminEmail && emailVO.value === this.adminEmail.toLowerCase()) {
         const adminUser = User.createAdmin(emailVO, 'Admin');
         await this.userRepository.save(adminUser);
         user = await this.userRepository.findByEmail(emailVO);
