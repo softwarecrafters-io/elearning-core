@@ -4,7 +4,7 @@ Review PR feedback from Tech Lead and apply changes.
 
 ## Steps
 
-1. **Read PR feedback**:
+1. **Read PR feedback **:
    - Get current branch: `git branch --show-current`
    - Find open PR: `gh pr list --head <branch> --json number,url`
    - Read general comments: `gh pr view <number> --comments`
