@@ -3,8 +3,8 @@ import { defineConfig, devices } from '@playwright/test';
 export const testOTP = '123456';
 
 export default defineConfig({
-  testDir: './src',
-  testMatch: '**/tests/e2e/*.spec.ts',
+  testDir: './tests/e2e',
+  testMatch: '*.spec.ts',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
