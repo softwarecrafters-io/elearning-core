@@ -14,6 +14,10 @@ export class User {
     return new User(Id.generate(), email, name, UserRole.create('student'));
   }
 
+  static createAdmin(email: Email, name: string): User {
+    return new User(Id.generate(), email, name, UserRole.create('admin'));
+  }
+
   static reconstitute(id: Id, email: Email, name: string, role: UserRole): User {
     return new User(id, email, name, role);
   }

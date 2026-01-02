@@ -12,6 +12,14 @@ describe('The User', () => {
     expect(user.role.isStudent()).toBe(true);
   });
 
+  it('creates with admin role when specified', () => {
+    const email = Email.create('admin@example.com');
+
+    const user = User.createAdmin(email, 'Admin User');
+
+    expect(user.role.isAdmin()).toBe(true);
+  });
+
   it('assigns unique id when created', () => {
     const email = Email.create('test@example.com');
     const name = 'John Doe';
