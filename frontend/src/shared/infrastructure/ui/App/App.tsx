@@ -4,7 +4,9 @@ import { HealthPage } from '../../../../health/infrastructure/ui/Health/Health.p
 import { LoginPage } from '../../../../auth/infrastructure/ui/Login/Login.page';
 import { VerifyOTPPage } from '../../../../auth/infrastructure/ui/VerifyOTP/VerifyOTP.page';
 import { ProfilePage } from '../../../../auth/infrastructure/ui/Profile/Profile.page';
+import { AdminUsersPage } from '../../../../auth/infrastructure/ui/Admin/AdminUsers.page';
 import { ProtectedRoute } from '../ProtectedRoute/ProtectedRoute';
+import { ProtectedAdminRoute } from '../ProtectedAdminRoute/ProtectedAdminRoute';
 import { HomePage } from '../Home/Home.page';
 import { ThemeToggle } from '../ThemeToggle/ThemeToggle';
 import { Routes } from '../routes';
@@ -40,6 +42,14 @@ function AppRoutes() {
             <ProtectedRoute>
               <ProfilePage />
             </ProtectedRoute>
+          }
+        />
+        <Route
+          path={Routes.AdminUsers}
+          element={
+            <ProtectedAdminRoute>
+              <AdminUsersPage />
+            </ProtectedAdminRoute>
           }
         />
       </RouterRoutes>
