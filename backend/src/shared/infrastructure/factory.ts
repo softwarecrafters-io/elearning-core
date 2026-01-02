@@ -11,7 +11,6 @@ import { SessionRepository } from '../../auth/domain/repositories/SessionReposit
 import { MongoUserRepository } from '../../auth/infrastructure/adapters/MongoUserRepository';
 import { MongoLoginAttemptRepository } from '../../auth/infrastructure/adapters/MongoLoginAttemptRepository';
 import { MongoSessionRepository } from '../../auth/infrastructure/adapters/MongoSessionRepository';
-import { RegisterUserUseCase } from '../../auth/application/RegisterUserUseCase';
 import { RequestLoginUseCase } from '../../auth/application/RequestLoginUseCase';
 import { VerifyOTPUseCase } from '../../auth/application/VerifyOTPUseCase';
 import { RefreshTokenUseCase } from '../../auth/application/RefreshTokenUseCase';
@@ -19,7 +18,6 @@ import { LogoutUseCase } from '../../auth/application/LogoutUseCase';
 import { GetCurrentUserUseCase } from '../../auth/application/GetCurrentUserUseCase';
 import { UpdateUserNameUseCase } from '../../auth/application/UpdateUserNameUseCase';
 import { AuthController } from '../../auth/infrastructure/http/AuthController';
-import { RegistrationController } from '../../auth/infrastructure/http/RegistrationController';
 import { SessionController } from '../../auth/infrastructure/http/SessionController';
 import { ProfileController } from '../../auth/infrastructure/http/ProfileController';
 import { createAuthMiddleware } from '../../auth/infrastructure/http/AuthMiddleware';
@@ -159,10 +157,6 @@ export class Factory {
     return new HealthController(this.createHealthUseCase(), this.getLogger());
   }
 
-  static createRegisterUserUseCase(): RegisterUserUseCase {
-    return new RegisterUserUseCase(this.getUserRepository());
-  }
-
   static createRequestLoginUseCase(): RequestLoginUseCase {
     return new RequestLoginUseCase(
       this.getUserRepository(),
@@ -202,10 +196,6 @@ export class Factory {
 
   static createUpdateUserNameUseCase(): UpdateUserNameUseCase {
     return new UpdateUserNameUseCase(this.getUserRepository());
-  }
-
-  static createRegistrationController(): RegistrationController {
-    return new RegistrationController(this.createRegisterUserUseCase(), this.getLogger());
   }
 
   static createAuthController(): AuthController {

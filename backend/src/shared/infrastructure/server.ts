@@ -12,8 +12,6 @@ export function createServer(): Express {
   app.use(createHttpLogger());
   const healthController = Factory.createHealthController();
   app.get(ApiRoutes.Health, (request, response) => healthController.check(request, response));
-  const registrationController = Factory.createRegistrationController();
-  app.post(ApiRoutes.Auth.Register, (request, response) => registrationController.register(request, response));
   const authController = Factory.createAuthController();
   app.post(ApiRoutes.Auth.Login, (request, response) => authController.login(request, response));
   app.post(ApiRoutes.Auth.Verify, (request, response) => authController.verify(request, response));
