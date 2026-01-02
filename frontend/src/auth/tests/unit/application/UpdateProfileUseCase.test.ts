@@ -4,7 +4,7 @@ import { User } from '../../../domain/entities/User';
 
 describe('The UpdateProfileUseCase', () => {
   it('returns updated user DTO', async () => {
-    const user = User.create('user-123', 'test@example.com', 'John Doe');
+    const user = User.create('user-123', 'test@example.com', 'John Doe', 'student');
     const repository = new InMemoryProfileRepository(user);
     const useCase = new UpdateProfileUseCase(repository);
 

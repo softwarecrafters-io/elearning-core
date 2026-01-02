@@ -4,7 +4,7 @@ import { User } from '../../../domain/entities/User';
 
 describe('The GetProfileUseCase', () => {
   it('provides the authenticated user profile information', async () => {
-    const user = User.create('user-123', 'test@example.com', 'John Doe');
+    const user = User.create('user-123', 'test@example.com', 'John Doe', 'student');
     const repository = new InMemoryProfileRepository(user);
     const useCase = new GetProfileUseCase(repository);
 

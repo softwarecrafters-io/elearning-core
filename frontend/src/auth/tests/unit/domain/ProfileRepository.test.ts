@@ -3,7 +3,7 @@ import { InMemoryProfileRepository } from '../../../domain/repositories/ProfileR
 
 describe('The InMemoryProfileRepository', () => {
   it('returns the configured user on getProfile', async () => {
-    const user = User.create('user-1', 'test@example.com', 'Test User');
+    const user = User.create('user-1', 'test@example.com', 'Test User', 'student');
     const repository = new InMemoryProfileRepository(user);
 
     const result = await repository.getProfile();
@@ -14,7 +14,7 @@ describe('The InMemoryProfileRepository', () => {
   });
 
   it('updates the name and returns the updated user', async () => {
-    const user = User.create('user-1', 'test@example.com', 'Old Name');
+    const user = User.create('user-1', 'test@example.com', 'Old Name', 'student');
     const repository = new InMemoryProfileRepository(user);
 
     const result = await repository.updateProfile('New Name');
