@@ -5,8 +5,10 @@ import { ApiRoutes } from '@app/common/src/infrastructure/api/routes';
 
 describe('The Auth API', () => {
   let server: ReturnType<typeof createServer>;
+  const webhookSecret = 'test-webhook-secret';
 
   beforeAll(async () => {
+    process.env.USER_WEBHOOK_SECRET = webhookSecret;
     await Factory.connectToMongoInMemory();
     server = createServer();
   });
@@ -24,37 +26,12 @@ describe('The Auth API', () => {
     return doc?.otpCode as string;
   }
 
-  it('allows user registration', async () => {
-    const response = await request(server)
-      .post(ApiRoutes.Auth.Register)
-      .send({ email: 'test@example.com', name: 'John Doe' });
-
-    expect(response.status).toBe(201);
-    expect(response.body.email).toBe('test@example.com');
-    expect(response.body.name).toBe('John Doe');
-    expect(response.body.id).toBeDefined();
-  });
-
-  it('requires email for registration', async () => {
-    const response = await request(server).post(ApiRoutes.Auth.Register).send({ name: 'John Doe' });
-
-    expect(response.status).toBe(400);
-    expect(response.body.error).toBe('email is required');
-  });
-
-  it('does not allow duplicate registration', async () => {
-    await request(server).post(ApiRoutes.Auth.Register).send({ email: 'test@example.com', name: 'John Doe' });
-
-    const response = await request(server)
-      .post(ApiRoutes.Auth.Register)
-      .send({ email: 'test@example.com', name: 'Jane Doe' });
-
-    expect(response.status).toBe(422);
-    expect(response.body.error).toContain('already exists');
-  });
+  async function createUser(email: string, name: string): Promise<void> {
+    await request(server).post(ApiRoutes.Webhooks.Users).set('X-Webhook-Secret', webhookSecret).send({ email, name });
+  }
 
   it('initiates login for registered user', async () => {
-    await request(server).post(ApiRoutes.Auth.Register).send({ email: 'test@example.com', name: 'John Doe' });
+    await createUser('test@example.com', 'John Doe');
 
     const response = await request(server).post(ApiRoutes.Auth.Login).send({ email: 'test@example.com' });
 
@@ -78,7 +55,7 @@ describe('The Auth API', () => {
   });
 
   it('does not accept wrong OTP code', async () => {
-    await request(server).post(ApiRoutes.Auth.Register).send({ email: 'test@example.com', name: 'John Doe' });
+    await createUser('test@example.com', 'John Doe');
     await request(server).post(ApiRoutes.Auth.Login).send({ email: 'test@example.com' });
 
     const response = await request(server)
@@ -90,7 +67,7 @@ describe('The Auth API', () => {
   });
 
   it('grants access and refresh tokens for valid OTP', async () => {
-    await request(server).post(ApiRoutes.Auth.Register).send({ email: 'test@example.com', name: 'John Doe' });
+    await createUser('test@example.com', 'John Doe');
     await request(server).post(ApiRoutes.Auth.Login).send({ email: 'test@example.com' });
     const otp = await getOtpForEmail('test@example.com');
 
@@ -102,7 +79,7 @@ describe('The Auth API', () => {
   });
 
   it('blocks verification after 5 failed OTP attempts', async () => {
-    await request(server).post(ApiRoutes.Auth.Register).send({ email: 'test@example.com', name: 'John Doe' });
+    await createUser('test@example.com', 'John Doe');
     await request(server).post(ApiRoutes.Auth.Login).send({ email: 'test@example.com' });
     await request(server).post(ApiRoutes.Auth.Verify).send({ email: 'test@example.com', code: '000000' });
     await request(server).post(ApiRoutes.Auth.Verify).send({ email: 'test@example.com', code: '000000' });
@@ -119,7 +96,7 @@ describe('The Auth API', () => {
   });
 
   it('refreshes tokens with valid refresh token', async () => {
-    await request(server).post(ApiRoutes.Auth.Register).send({ email: 'test@example.com', name: 'John Doe' });
+    await createUser('test@example.com', 'John Doe');
     await request(server).post(ApiRoutes.Auth.Login).send({ email: 'test@example.com' });
     const otp = await getOtpForEmail('test@example.com');
     const verifyResponse = await request(server)
@@ -142,7 +119,7 @@ describe('The Auth API', () => {
   });
 
   it('invalidates session on logout', async () => {
-    await request(server).post(ApiRoutes.Auth.Register).send({ email: 'test@example.com', name: 'John Doe' });
+    await createUser('test@example.com', 'John Doe');
     await request(server).post(ApiRoutes.Auth.Login).send({ email: 'test@example.com' });
     const otp = await getOtpForEmail('test@example.com');
     const verifyResponse = await request(server)
@@ -158,7 +135,7 @@ describe('The Auth API', () => {
   });
 
   it('invalidates previous session on new login', async () => {
-    await request(server).post(ApiRoutes.Auth.Register).send({ email: 'test@example.com', name: 'John Doe' });
+    await createUser('test@example.com', 'John Doe');
     await request(server).post(ApiRoutes.Auth.Login).send({ email: 'test@example.com' });
     const otp1 = await getOtpForEmail('test@example.com');
     const verifyResponse1 = await request(server)

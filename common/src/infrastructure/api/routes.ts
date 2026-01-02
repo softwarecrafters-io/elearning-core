@@ -1,7 +1,6 @@
 export const ApiRoutes = {
   Health: '/health',
   Auth: {
-    Register: '/auth/register',
     Login: '/auth/login',
     Verify: '/auth/verify',
     Refresh: '/auth/refresh',
@@ -9,5 +8,11 @@ export const ApiRoutes = {
   },
   Profile: {
     Me: '/profile/me',
+  },
+  Admin: {
+    Users: '/admin/users',
+  },
+  Webhooks: {
+    Users: '/webhooks/users',
   },
 } as const;

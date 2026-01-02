@@ -3,8 +3,8 @@ import { defineConfig, devices } from '@playwright/test';
 export const testOTP = '123456';
 
 export default defineConfig({
-  testDir: './src',
-  testMatch: '**/tests/e2e/*.spec.ts',
+  testDir: './tests/e2e',
+  testMatch: '*.spec.ts',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
@@ -23,7 +23,7 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: `TEST_OTP=${testOTP} NODE_ENV=test PORT=3002 npm run start:test`,
+      command: `TEST_OTP=${testOTP} NODE_ENV=test PORT=3002 USER_WEBHOOK_SECRET=test-webhook-secret npm run start:test`,
       url: 'http://localhost:3002/health',
       cwd: '../backend',
       reuseExistingServer: !process.env.CI,

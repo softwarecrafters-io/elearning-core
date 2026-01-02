@@ -39,6 +39,7 @@ export default async function globalSetup(): Promise<void> {
       PORT: String(backendPort),
       TEST_OTP: '123456',
       LOG_LEVEL: 'silent',
+      USER_WEBHOOK_SECRET: 'test-webhook-secret',
     },
     stdio: 'pipe',
     shell: true,

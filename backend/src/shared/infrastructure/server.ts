@@ -4,6 +4,7 @@ import { Factory } from './factory';
 import { createHttpLogger } from './adapters/PinoLogger';
 import { ApiRoutes } from '@app/common/src/infrastructure/api/routes';
 import { AuthenticatedRequest } from '../../auth/infrastructure/http/ProfileController';
+import { AdminRequest } from '../../auth/infrastructure/http/AdminController';
 
 export function createServer(): Express {
   const app = express();
@@ -12,8 +13,6 @@ export function createServer(): Express {
   app.use(createHttpLogger());
   const healthController = Factory.createHealthController();
   app.get(ApiRoutes.Health, (request, response) => healthController.check(request, response));
-  const registrationController = Factory.createRegistrationController();
-  app.post(ApiRoutes.Auth.Register, (request, response) => registrationController.register(request, response));
   const authController = Factory.createAuthController();
   app.post(ApiRoutes.Auth.Login, (request, response) => authController.login(request, response));
   app.post(ApiRoutes.Auth.Verify, (request, response) => authController.verify(request, response));
@@ -28,5 +27,17 @@ export function createServer(): Express {
   app.patch(ApiRoutes.Profile.Me, authMiddleware, (request, response) =>
     profileController.updateMe(request as AuthenticatedRequest, response)
   );
+  const adminMiddleware = Factory.createAdminMiddleware();
+  const adminController = Factory.createAdminController();
+  app.post(ApiRoutes.Admin.Users, adminMiddleware, (request, response) =>
+    adminController.createUser(request as AdminRequest, response)
+  );
+  if (process.env.USER_WEBHOOK_SECRET) {
+    const webhookMiddleware = Factory.createWebhookAuthMiddleware();
+    const webhookController = Factory.createUserWebhookController();
+    app.post(ApiRoutes.Webhooks.Users, webhookMiddleware, (request, response) =>
+      webhookController.createUser(request, response)
+    );
+  }
   return app;
 }

@@ -5,8 +5,10 @@ import { ApiRoutes } from '@app/common/src/infrastructure/api/routes';
 
 describe('The Profile API', () => {
   let server: ReturnType<typeof createServer>;
+  const webhookSecret = 'test-webhook-secret';
 
   beforeAll(async () => {
+    process.env.USER_WEBHOOK_SECRET = webhookSecret;
     await Factory.connectToMongoInMemory();
     server = createServer();
   });
@@ -24,8 +26,8 @@ describe('The Profile API', () => {
     return doc?.otpCode as string;
   }
 
-  async function registerAndLogin(email: string, name: string): Promise<string> {
-    await request(server).post(ApiRoutes.Auth.Register).send({ email, name });
+  async function createUserAndLogin(email: string, name: string): Promise<string> {
+    await request(server).post(ApiRoutes.Webhooks.Users).set('X-Webhook-Secret', webhookSecret).send({ email, name });
     await request(server).post(ApiRoutes.Auth.Login).send({ email });
     const otp = await getOtpForEmail(email);
     const verifyResponse = await request(server).post(ApiRoutes.Auth.Verify).send({ email, code: otp });
@@ -33,7 +35,7 @@ describe('The Profile API', () => {
   }
 
   it('provides user profile for authenticated request', async () => {
-    const token = await registerAndLogin('test@example.com', 'John Doe');
+    const token = await createUserAndLogin('test@example.com', 'John Doe');
 
     const response = await request(server).get(ApiRoutes.Profile.Me).set('Authorization', `Bearer ${token}`);
 
@@ -51,7 +53,7 @@ describe('The Profile API', () => {
   });
 
   it('allows name change for authenticated request', async () => {
-    const token = await registerAndLogin('test@example.com', 'John Doe');
+    const token = await createUserAndLogin('test@example.com', 'John Doe');
 
     const response = await request(server)
       .patch(ApiRoutes.Profile.Me)

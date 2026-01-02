@@ -11,18 +11,22 @@ import { SessionRepository } from '../../auth/domain/repositories/SessionReposit
 import { MongoUserRepository } from '../../auth/infrastructure/adapters/MongoUserRepository';
 import { MongoLoginAttemptRepository } from '../../auth/infrastructure/adapters/MongoLoginAttemptRepository';
 import { MongoSessionRepository } from '../../auth/infrastructure/adapters/MongoSessionRepository';
-import { RegisterUserUseCase } from '../../auth/application/RegisterUserUseCase';
 import { RequestLoginUseCase } from '../../auth/application/RequestLoginUseCase';
 import { VerifyOTPUseCase } from '../../auth/application/VerifyOTPUseCase';
 import { RefreshTokenUseCase } from '../../auth/application/RefreshTokenUseCase';
 import { LogoutUseCase } from '../../auth/application/LogoutUseCase';
 import { GetCurrentUserUseCase } from '../../auth/application/GetCurrentUserUseCase';
 import { UpdateUserNameUseCase } from '../../auth/application/UpdateUserNameUseCase';
+import { CreateUserUseCase } from '../../auth/application/CreateUserUseCase';
+import { GetOrCreateUserUseCase } from '../../auth/application/GetOrCreateUserUseCase';
 import { AuthController } from '../../auth/infrastructure/http/AuthController';
-import { RegistrationController } from '../../auth/infrastructure/http/RegistrationController';
 import { SessionController } from '../../auth/infrastructure/http/SessionController';
 import { ProfileController } from '../../auth/infrastructure/http/ProfileController';
+import { AdminController } from '../../auth/infrastructure/http/AdminController';
+import { UserWebhookController } from '../../auth/infrastructure/http/UserWebhookController';
 import { createAuthMiddleware } from '../../auth/infrastructure/http/AuthMiddleware';
+import { createAdminMiddleware } from '../../auth/infrastructure/http/AdminMiddleware';
+import { createWebhookAuthMiddleware } from '../../auth/infrastructure/http/WebhookAuthMiddleware';
 import { ConsoleEmailSender } from '../../auth/infrastructure/adapters/ConsoleEmailSender';
 import { JWTTokenGenerator } from '../../auth/infrastructure/adapters/JWTTokenGenerator';
 import { JWTTokenVerifier } from '../../auth/infrastructure/adapters/JWTTokenVerifier';
@@ -159,16 +163,13 @@ export class Factory {
     return new HealthController(this.createHealthUseCase(), this.getLogger());
   }
 
-  static createRegisterUserUseCase(): RegisterUserUseCase {
-    return new RegisterUserUseCase(this.getUserRepository());
-  }
-
   static createRequestLoginUseCase(): RequestLoginUseCase {
     return new RequestLoginUseCase(
       this.getUserRepository(),
       this.getLoginAttemptRepository(),
       this.getEmailSender(),
-      this.getOTPGenerator()
+      this.getOTPGenerator(),
+      process.env.ADMIN_EMAIL
     );
   }
 
@@ -203,10 +204,6 @@ export class Factory {
     return new UpdateUserNameUseCase(this.getUserRepository());
   }
 
-  static createRegistrationController(): RegistrationController {
-    return new RegistrationController(this.createRegisterUserUseCase(), this.getLogger());
-  }
-
   static createAuthController(): AuthController {
     return new AuthController(this.createRequestLoginUseCase(), this.createVerifyOTPUseCase(), this.getLogger());
   }
@@ -225,5 +222,33 @@ export class Factory {
 
   static createAuthMiddleware() {
     return createAuthMiddleware(this.getTokenVerifier(), this.getUserRepository());
+  }
+
+  static createAdminMiddleware() {
+    return createAdminMiddleware(this.getTokenVerifier(), this.getUserRepository());
+  }
+
+  static createWebhookAuthMiddleware() {
+    const secret = process.env.USER_WEBHOOK_SECRET;
+    if (!secret) {
+      throw new Error('USER_WEBHOOK_SECRET environment variable is required');
+    }
+    return createWebhookAuthMiddleware(secret);
+  }
+
+  static createCreateUserUseCase(): CreateUserUseCase {
+    return new CreateUserUseCase(this.getUserRepository());
+  }
+
+  static createGetOrCreateUserUseCase(): GetOrCreateUserUseCase {
+    return new GetOrCreateUserUseCase(this.getUserRepository());
+  }
+
+  static createAdminController(): AdminController {
+    return new AdminController(this.createCreateUserUseCase(), this.getLogger());
+  }
+
+  static createUserWebhookController(): UserWebhookController {
+    return new UserWebhookController(this.createGetOrCreateUserUseCase(), this.getLogger());
   }
 }
