@@ -1,4 +1,4 @@
-# pr-review
+# pr-reviewed
 
 Review PR feedback, apply fixes, and resolve conversations.
 
@@ -16,7 +16,7 @@ Review PR feedback, apply fixes, and resolve conversations.
    gh api repos/softwarecrafters-io/elearning-core/pulls/<number>/comments
    ```
 
-3. **Summarize and apply fixes** following architecture rules
+3. **Summarize and apply fixes** following architecture rules y el comando de @./cursor/commands/refactor.md and @./cursor/commands/refactor-tests.md
 
 4. **Resolve conversations** via GraphQL:
    ```bash
@@ -36,3 +36,4 @@ git checkout master && git pull origin master && git branch -d <branch>
 ```
 
 Inform: "PR merged, synced with master, ready for next task"
+
