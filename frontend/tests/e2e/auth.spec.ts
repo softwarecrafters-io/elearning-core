@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { Routes } from '../../src/shared/infrastructure/ui/routes';
-import { testOTP } from '../../playwright.config';
+import { testOTP, adminEmail } from '../../playwright.config';
 
 const backendUrl = 'http://localhost:3002';
 const webhookSecret = 'test-webhook-secret';
@@ -187,5 +187,94 @@ test.describe('Home Page', () => {
     await page.getByRole('link', { name: 'Login' }).click();
 
     await expect(page).toHaveURL(Routes.Login);
+  });
+
+  test('shows admin link only for admin users', async ({ page, request }) => {
+    await page.goto(Routes.Home);
+    await expect(page.getByRole('link', { name: 'Admin Users' })).not.toBeVisible();
+    const adminEmail = `e2e-admin-nav-${Date.now()}@example.com`;
+    await request.post(`${backendUrl}/auth/login`, { data: { email: adminEmail } });
+    const db = await request.get(`${backendUrl}/health`);
+    await page.goto(Routes.Home);
+    await expect(page.getByRole('link', { name: 'Admin Users' })).not.toBeVisible();
+  });
+});
+
+test.describe('Admin Users Page', () => {
+  test.describe.configure({ mode: 'serial' });
+
+  async function loginAsAdmin(page: typeof test extends (args: { page: infer P }) => void ? P : never) {
+    await page.goto(Routes.Login);
+    await page.getByPlaceholder('Email').fill(adminEmail);
+    await page.getByRole('button', { name: 'Send OTP' }).click();
+    await expect(page).toHaveURL(new RegExp(`${Routes.Verify}\\?email=`), { timeout: 10000 });
+    await page.getByPlaceholder('000000').fill(testOTP);
+    await page.getByRole('button', { name: 'Verify' }).click();
+    await expect(page).toHaveURL(Routes.Profile, { timeout: 10000 });
+  }
+
+  test('redirects to login when not authenticated', async ({ page }) => {
+    await page.goto(Routes.AdminUsers);
+
+    await expect(page).toHaveURL(Routes.Login);
+  });
+
+  test('redirects to home when authenticated but not admin', async ({ page, request }) => {
+    const email = `e2e-student-admin-${Date.now()}@example.com`;
+    await registerUser(request, email, 'Student User');
+    await loginAndVerify(page, email);
+
+    await page.goto(Routes.AdminUsers);
+
+    await expect(page).toHaveURL(Routes.Home);
+  });
+
+  test('shows user management page for admin', async ({ page }) => {
+    await loginAsAdmin(page);
+
+    await page.goto(Routes.AdminUsers);
+
+    await expect(page.getByRole('heading', { name: 'User Management' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Add User' })).toBeVisible();
+  });
+
+  test('admin can create a new user', async ({ page }) => {
+    await loginAsAdmin(page);
+    await page.goto(Routes.AdminUsers);
+    const newUserEmail = `e2e-created-${Date.now()}@example.com`;
+
+    await page.getByRole('button', { name: 'Add User' }).click();
+    await page.getByPlaceholder('Email').fill(newUserEmail);
+    await page.getByPlaceholder('Name').fill('Created User');
+    await page.getByRole('button', { name: 'Create' }).click();
+
+    await expect(page.getByText(newUserEmail)).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText('Created User')).toBeVisible();
+  });
+
+  test('admin can edit user name', async ({ page, request }) => {
+    await loginAsAdmin(page);
+    const userEmail = `e2e-edit-admin-${Date.now()}@example.com`;
+    await registerUser(request, userEmail, 'Original Name');
+    await page.goto(Routes.AdminUsers);
+    await page.waitForSelector(`text=${userEmail}`);
+
+    await page.locator(`tr:has-text("${userEmail}")`).getByTitle('Edit').click();
+    await page.locator(`tr:has-text("${userEmail}") input`).fill('Edited Name');
+    await page.locator(`tr:has-text("${userEmail}")`).getByRole('button', { name: 'Save' }).click();
+
+    await expect(page.getByText('Edited Name')).toBeVisible({ timeout: 5000 });
+  });
+
+  test('admin can delete user', async ({ page, request }) => {
+    await loginAsAdmin(page);
+    const userEmail = `e2e-delete-admin-${Date.now()}@example.com`;
+    await registerUser(request, userEmail, 'To Delete');
+    await page.goto(Routes.AdminUsers);
+    await page.waitForSelector(`text=${userEmail}`);
+
+    await page.locator(`tr:has-text("${userEmail}")`).getByTitle('Delete').click();
+
+    await expect(page.getByText(userEmail)).not.toBeVisible({ timeout: 5000 });
   });
 });

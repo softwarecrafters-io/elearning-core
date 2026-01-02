@@ -90,4 +90,83 @@ describe('The Admin API', () => {
 
     expect(response.status).toBe(422);
   });
+
+  it('lists all users', async () => {
+    const adminToken = await getAdminToken();
+    await request(server)
+      .post(ApiRoutes.Admin.Users)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ email: 'user1@example.com', name: 'User One' });
+    await request(server)
+      .post(ApiRoutes.Admin.Users)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ email: 'user2@example.com', name: 'User Two' });
+
+    const response = await request(server).get(ApiRoutes.Admin.Users).set('Authorization', `Bearer ${adminToken}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveLength(3);
+    expect(response.body.map((u: { email: string }) => u.email)).toContain('admin@example.com');
+    expect(response.body.map((u: { email: string }) => u.email)).toContain('user1@example.com');
+    expect(response.body.map((u: { email: string }) => u.email)).toContain('user2@example.com');
+  });
+
+  it('updates user name', async () => {
+    const adminToken = await getAdminToken();
+    const createResponse = await request(server)
+      .post(ApiRoutes.Admin.Users)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ email: 'student@example.com', name: 'Original Name' });
+    const userId = createResponse.body.id;
+
+    const response = await request(server)
+      .patch(ApiRoutes.Admin.User(userId))
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ name: 'Updated Name' });
+
+    expect(response.status).toBe(200);
+    expect(response.body.name).toBe('Updated Name');
+    expect(response.body.email).toBe('student@example.com');
+  });
+
+  it('deletes user', async () => {
+    const adminToken = await getAdminToken();
+    const createResponse = await request(server)
+      .post(ApiRoutes.Admin.Users)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ email: 'todelete@example.com', name: 'To Delete' });
+    const userId = createResponse.body.id;
+
+    const deleteResponse = await request(server)
+      .delete(ApiRoutes.Admin.User(userId))
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(deleteResponse.status).toBe(204);
+    const listResponse = await request(server).get(ApiRoutes.Admin.Users).set('Authorization', `Bearer ${adminToken}`);
+    expect(listResponse.body.map((u: { email: string }) => u.email)).not.toContain('todelete@example.com');
+  });
+
+  it('returns 401 for list without token', async () => {
+    const response = await request(server).get(ApiRoutes.Admin.Users);
+
+    expect(response.status).toBe(401);
+  });
+
+  it('returns 403 for list if not admin', async () => {
+    const adminToken = await getAdminToken();
+    await request(server)
+      .post(ApiRoutes.Admin.Users)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ email: 'student@example.com', name: 'Student' });
+    await request(server).post(ApiRoutes.Auth.Login).send({ email: 'student@example.com' });
+    const studentOtp = await getOtpForEmail('student@example.com');
+    const studentLoginResponse = await request(server)
+      .post(ApiRoutes.Auth.Verify)
+      .send({ email: 'student@example.com', code: studentOtp });
+    const studentToken = studentLoginResponse.body.accessToken;
+
+    const response = await request(server).get(ApiRoutes.Admin.Users).set('Authorization', `Bearer ${studentToken}`);
+
+    expect(response.status).toBe(403);
+  });
 });
