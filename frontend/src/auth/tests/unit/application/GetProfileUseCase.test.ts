@@ -4,7 +4,7 @@ import { User } from '../../../domain/entities/User';
 
 describe('The GetProfileUseCase', () => {
   it('provides the authenticated user profile information', async () => {
-    const user = User.create('user-123', 'test@example.com', 'John Doe');
+    const user = User.create('user-123', 'test@example.com', 'John Doe', 'student');
     const repository = new InMemoryProfileRepository(user);
     const useCase = new GetProfileUseCase(repository);
 
@@ -13,5 +13,6 @@ describe('The GetProfileUseCase', () => {
     expect(profile.id).toBe('user-123');
     expect(profile.email).toBe('test@example.com');
     expect(profile.name).toBe('John Doe');
+    expect(profile.role).toBe('student');
   });
 });

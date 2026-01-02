@@ -29,8 +29,17 @@ export function createServer(): Express {
   );
   const adminMiddleware = Factory.createAdminMiddleware();
   const adminController = Factory.createAdminController();
+  app.get(ApiRoutes.Admin.Users, adminMiddleware, (request, response) =>
+    adminController.listUsers(request as AdminRequest, response)
+  );
   app.post(ApiRoutes.Admin.Users, adminMiddleware, (request, response) =>
     adminController.createUser(request as AdminRequest, response)
+  );
+  app.patch(ApiRoutes.Admin.User(':id'), adminMiddleware, (request, response) =>
+    adminController.updateUser(request as AdminRequest, response)
+  );
+  app.delete(ApiRoutes.Admin.User(':id'), adminMiddleware, (request, response) =>
+    adminController.deleteUser(request as AdminRequest, response)
   );
   if (process.env.USER_WEBHOOK_SECRET) {
     const webhookMiddleware = Factory.createWebhookAuthMiddleware();

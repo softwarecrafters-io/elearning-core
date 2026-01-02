@@ -5,6 +5,8 @@ import type { AuthGateway } from '../../auth/application/ports/AuthGateway';
 import { HttpAuthGateway } from '../../auth/infrastructure/adapters/HttpAuthGateway';
 import type { ProfileRepository } from '../../auth/domain/repositories/ProfileRepository';
 import { HttpProfileRepository } from '../../auth/infrastructure/adapters/HttpProfileRepository';
+import type { UserManagementRepository } from '../../auth/domain/repositories/UserManagementRepository';
+import { HttpUserManagementRepository } from '../../auth/infrastructure/adapters/HttpUserManagementRepository';
 import type { TokenStorage } from '../../auth/application/ports/TokenStorage';
 import { LocalStorageTokenStorage } from '../../auth/infrastructure/adapters/LocalStorageTokenStorage';
 import type { SessionGateway } from '../../auth/application/ports/SessionGateway';
@@ -15,6 +17,10 @@ import { GetProfileUseCase } from '../../auth/application/GetProfileUseCase';
 import { UpdateProfileUseCase } from '../../auth/application/UpdateProfileUseCase';
 import { LogoutUseCase } from '../../auth/application/LogoutUseCase';
 import { RefreshTokenUseCase } from '../../auth/application/RefreshTokenUseCase';
+import { ListUsersUseCase } from '../../auth/application/ListUsersUseCase';
+import { AdminCreateUserUseCase } from '../../auth/application/AdminCreateUserUseCase';
+import { AdminUpdateUserUseCase } from '../../auth/application/AdminUpdateUserUseCase';
+import { AdminDeleteUserUseCase } from '../../auth/application/AdminDeleteUserUseCase';
 import { HttpClient } from './http/HttpClient';
 import { AuthenticatedHttpClient } from './http/AuthenticatedHttpClient';
 import { TokenRefreshScheduler } from '../../auth/infrastructure/services/TokenRefreshScheduler';
@@ -24,6 +30,7 @@ export class Factory {
   private static healthRepository: HealthRepository;
   private static authGateway: AuthGateway;
   private static profileRepository: ProfileRepository;
+  private static userManagementRepository: UserManagementRepository;
   private static tokenStorage: TokenStorage;
   private static sessionGateway: SessionGateway;
   private static authenticatedHttpClient: AuthenticatedHttpClient;
@@ -75,6 +82,13 @@ export class Factory {
     return this.profileRepository;
   }
 
+  private static getUserManagementRepository(): UserManagementRepository {
+    if (!this.userManagementRepository) {
+      this.userManagementRepository = new HttpUserManagementRepository(this.getAuthenticatedHttpClient());
+    }
+    return this.userManagementRepository;
+  }
+
   static createTokenStorage(): TokenStorage {
     if (!this.tokenStorage) {
       this.tokenStorage = new LocalStorageTokenStorage();
@@ -118,5 +132,21 @@ export class Factory {
       );
     }
     return this.tokenRefreshScheduler;
+  }
+
+  static createListUsersUseCase(): ListUsersUseCase {
+    return new ListUsersUseCase(this.getUserManagementRepository());
+  }
+
+  static createAdminCreateUserUseCase(): AdminCreateUserUseCase {
+    return new AdminCreateUserUseCase(this.getUserManagementRepository());
+  }
+
+  static createAdminUpdateUserUseCase(): AdminUpdateUserUseCase {
+    return new AdminUpdateUserUseCase(this.getUserManagementRepository());
+  }
+
+  static createAdminDeleteUserUseCase(): AdminDeleteUserUseCase {
+    return new AdminDeleteUserUseCase(this.getUserManagementRepository());
   }
 }

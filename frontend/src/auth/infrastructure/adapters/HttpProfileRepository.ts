@@ -9,11 +9,11 @@ export class HttpProfileRepository implements ProfileRepository {
 
   async getProfile(): Promise<User> {
     const userDTO = await this.authenticatedClient.get<UserDTO>(ApiRoutes.Profile.Me);
-    return User.create(userDTO.id, userDTO.email, userDTO.name ?? '');
+    return User.create(userDTO.id, userDTO.email, userDTO.name ?? '', userDTO.role);
   }
 
   async updateProfile(name: string): Promise<User> {
     const userDTO = await this.authenticatedClient.patch<UserDTO>(ApiRoutes.Profile.Me, { name });
-    return User.create(userDTO.id, userDTO.email, userDTO.name ?? '');
+    return User.create(userDTO.id, userDTO.email, userDTO.name ?? '', userDTO.role);
   }
 }

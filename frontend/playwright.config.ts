@@ -1,6 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 export const testOTP = '123456';
+export const adminEmail = 'admin@e2e-test.com';
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -23,7 +24,7 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: `TEST_OTP=${testOTP} NODE_ENV=test PORT=3002 USER_WEBHOOK_SECRET=test-webhook-secret npm run start:test`,
+      command: `TEST_OTP=${testOTP} ADMIN_EMAIL=${adminEmail} NODE_ENV=test PORT=3002 USER_WEBHOOK_SECRET=test-webhook-secret npm run start:test`,
       url: 'http://localhost:3002/health',
       cwd: '../backend',
       reuseExistingServer: !process.env.CI,

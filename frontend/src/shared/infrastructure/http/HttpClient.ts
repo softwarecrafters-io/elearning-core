@@ -53,6 +53,17 @@ export class HttpClient {
     return this.handleResponse(response);
   }
 
+  async delete(path: string, options?: HttpClientOptions): Promise<void> {
+    const response = await fetch(`${this.baseUrl}${path}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        ...options?.headers,
+      },
+    });
+    await this.handleResponse(response);
+  }
+
   private async handleResponse<T>(response: Response): Promise<T> {
     if (!response.ok) {
       const error = await response.json().catch(() => ({ error: 'Request failed' }));

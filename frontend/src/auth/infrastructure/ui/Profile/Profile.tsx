@@ -56,6 +56,12 @@ export function Profile(props: Props) {
             <span className={styles.value}>{user.email}</span>
           </div>
           <div className={styles.field}>
+            <span className={styles.label}>Role</span>
+            <span className={`${styles.badge} ${user.role === 'admin' ? styles.badgeAdmin : styles.badgeStudent}`}>
+              {user.role}
+            </span>
+          </div>
+          <div className={styles.field}>
             <span className={styles.label}>Name</span>
             {hook.editing ? (
               <input

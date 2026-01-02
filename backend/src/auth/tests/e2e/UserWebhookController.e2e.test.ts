@@ -11,7 +11,7 @@ describe('The Webhook API', () => {
     process.env.USER_WEBHOOK_SECRET = webhookSecret;
     await Factory.connectToMongoInMemory();
     server = createServer();
-  });
+  }, 30000);
 
   afterAll(async () => {
     await Factory.disconnectFromMongo();

@@ -19,6 +19,8 @@ import { GetCurrentUserUseCase } from '../../auth/application/GetCurrentUserUseC
 import { UpdateUserNameUseCase } from '../../auth/application/UpdateUserNameUseCase';
 import { CreateUserUseCase } from '../../auth/application/CreateUserUseCase';
 import { GetOrCreateUserUseCase } from '../../auth/application/GetOrCreateUserUseCase';
+import { ListUsersUseCase } from '../../auth/application/ListUsersUseCase';
+import { DeleteUserUseCase } from '../../auth/application/DeleteUserUseCase';
 import { AuthController } from '../../auth/infrastructure/http/AuthController';
 import { SessionController } from '../../auth/infrastructure/http/SessionController';
 import { ProfileController } from '../../auth/infrastructure/http/ProfileController';
@@ -244,8 +246,22 @@ export class Factory {
     return new GetOrCreateUserUseCase(this.getUserRepository());
   }
 
+  static createListUsersUseCase(): ListUsersUseCase {
+    return new ListUsersUseCase(this.getUserRepository());
+  }
+
+  static createDeleteUserUseCase(): DeleteUserUseCase {
+    return new DeleteUserUseCase(this.getUserRepository());
+  }
+
   static createAdminController(): AdminController {
-    return new AdminController(this.createCreateUserUseCase(), this.getLogger());
+    return new AdminController(
+      this.createCreateUserUseCase(),
+      this.createListUsersUseCase(),
+      this.createUpdateUserNameUseCase(),
+      this.createDeleteUserUseCase(),
+      this.getLogger()
+    );
   }
 
   static createUserWebhookController(): UserWebhookController {
