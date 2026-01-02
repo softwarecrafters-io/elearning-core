@@ -168,7 +168,8 @@ export class Factory {
       this.getUserRepository(),
       this.getLoginAttemptRepository(),
       this.getEmailSender(),
-      this.getOTPGenerator()
+      this.getOTPGenerator(),
+      process.env.ADMIN_EMAIL
     );
   }
 
