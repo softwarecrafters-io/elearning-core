@@ -44,6 +44,17 @@ export class AuthenticatedHttpClient {
     });
   }
 
+  async delete(path: string, options?: HttpClientOptions): Promise<void> {
+    const token = await this.ensureValidToken();
+    return this.httpClient.delete(path, {
+      ...options,
+      headers: {
+        ...options?.headers,
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  }
+
   private async ensureValidToken(): Promise<string> {
     const maybeToken = this.tokenStorage.getAccessToken();
     if (maybeToken.isNone()) {

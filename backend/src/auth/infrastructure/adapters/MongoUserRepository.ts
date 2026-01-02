@@ -40,6 +40,15 @@ export class MongoUserRepository implements UserRepository {
     return Maybe.fromNullable(document).map((doc) => this.toDomain(doc));
   }
 
+  async findAll(): Promise<User[]> {
+    const documents = await this.collection.find({}).toArray();
+    return documents.map((doc) => this.toDomain(doc));
+  }
+
+  async delete(id: Id): Promise<void> {
+    await this.collection.deleteOne({ _id: id.value });
+  }
+
   private toDocument(user: User): UserDocument {
     const primitives = user.toPrimitives();
     return {
