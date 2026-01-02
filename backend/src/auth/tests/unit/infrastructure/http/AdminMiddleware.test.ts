@@ -24,11 +24,6 @@ describe('The AdminMiddleware', () => {
     return res;
   }
 
-  // TODO: returns 401 if no authorization header
-  // TODO: returns 401 if invalid token
-  // TODO: returns 403 if user is not admin
-  // TODO: calls next if user is admin
-
   it('calls next if user is admin', async () => {
     const admin = User.createAdmin(Email.create('admin@example.com'), 'Admin');
     const userRepository = new InMemoryUserRepository();
@@ -43,5 +38,50 @@ describe('The AdminMiddleware', () => {
 
     expect((req as Request & { userId: string }).userId).toBe(admin.id.value);
     expect(next).toHaveBeenCalled();
+  });
+
+  it('returns 401 if no authorization header', async () => {
+    const userRepository = new InMemoryUserRepository();
+    const req = createMockRequest() as Request;
+    const res = createMockResponse() as Response;
+    const next = jest.fn() as NextFunction;
+    const middleware = createAdminMiddleware(tokenVerifier, userRepository);
+
+    await middleware(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(401);
+    expect(res.json).toHaveBeenCalledWith({ error: 'Authorization header required' });
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it('returns 401 if invalid token', async () => {
+    const userRepository = new InMemoryUserRepository();
+    const req = createMockRequest('Bearer invalid-token') as Request;
+    const res = createMockResponse() as Response;
+    const next = jest.fn() as NextFunction;
+    const middleware = createAdminMiddleware(tokenVerifier, userRepository);
+
+    await middleware(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(401);
+    expect(res.json).toHaveBeenCalledWith({ error: 'Invalid token' });
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it('returns 403 if user is not admin', async () => {
+    const student = User.create(Email.create('student@example.com'), 'Student');
+    const userRepository = new InMemoryUserRepository();
+    await userRepository.save(student);
+    const token = jwt.sign({ email: 'student@example.com' }, secret);
+    const req = createMockRequest(`Bearer ${token}`) as Request;
+    const res = createMockResponse() as Response;
+    const next = jest.fn() as NextFunction;
+    const middleware = createAdminMiddleware(tokenVerifier, userRepository);
+
+    await middleware(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(403);
+    expect(res.json).toHaveBeenCalledWith({ error: 'Admin access required' });
+    expect(next).not.toHaveBeenCalled();
   });
 });
