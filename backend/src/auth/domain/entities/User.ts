@@ -26,6 +26,10 @@ export class User {
     return this.id.equals(other.id);
   }
 
+  isAdmin(): boolean {
+    return this.role.isAdmin();
+  }
+
   updateName(newName: string): void {
     this.name = newName;
   }

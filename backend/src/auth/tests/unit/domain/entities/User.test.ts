@@ -69,4 +69,12 @@ describe('The User', () => {
       role: 'student',
     });
   });
+
+  it('identifies admin user correctly', () => {
+    const adminUser = User.createAdmin(Email.create('admin@example.com'), 'Admin');
+    const studentUser = User.create(Email.create('student@example.com'), 'Student');
+
+    expect(adminUser.isAdmin()).toBe(true);
+    expect(studentUser.isAdmin()).toBe(false);
+  });
 });
