@@ -1,59 +1,38 @@
 # pr-review
 
-Review PR feedback from Tech Lead and apply changes.
+Review PR feedback, apply fixes, and resolve conversations.
 
 ## Steps
 
-1. **Read PR feedback **:
-   - Get current branch: `git branch --show-current`
-   - Find open PR: `gh pr list --head <branch> --json number,url`
-   - Read general comments: `gh pr view <number> --comments`
-   - Read inline code comments: `gh api repos/softwarecrafters-io/elearning-core/pulls/<number>/comments`
-
-2. **Review architecture rules** before making changes:
-   - @.cursor/rules/architecture-domain-value-objects.mdc
-   - @.cursor/rules/architecture-domain-entities.mdc
-   - @.cursor/rules/architecture-domain-repositories.mdc
-   - @.cursor/rules/architecture-application-usecases.mdc
-   - @.cursor/rules/architecture-application-dtos.mdc
-   - @.cursor/rules/design-naming.mdc
-   - @.cursor/rules/design-functions.mdc
-   - @.cursor/rules/design-classes-modules.mdc
-   - @.cursor/rules/design-errors.mdc
-   - @.cursor/rules/practices-testing.mdc
-   - @.cursor/rules/practices-tdd.mdc
-
-3. **Summarize feedback** received from Tech Lead
-
-4. **Apply changes** following:
-   - Architecture rules from step 2
-   - Tech Lead comments from step 1
-   - TDD practices (if changes require new tests)
-
-5. **Commit and push** the fixes with appropriate commit message
-
-If a PR number is provided (`pr-review #123`), use that number directly.
-
-If Tech Lead mentions a specific file, line, or concern, focus on that area first while still reviewing all comments.
-
-## If PR is already merged
-
-If `gh pr list --head <branch>` returns empty (PR already merged):
-
-1. **Switch to master**:
+1. **Get PR info**:
    ```bash
-   git checkout master
+   git branch --show-current
+   gh pr list --head <branch> --json number,url
    ```
 
-2. **Pull latest changes**:
+2. **Read feedback**:
    ```bash
-   git pull origin master
+   gh pr view <number> --comments
+   gh api repos/softwarecrafters-io/elearning-core/pulls/<number>/comments
    ```
 
-3. **Delete merged branch**:
+3. **Summarize and apply fixes** following architecture rules
+
+4. **Resolve conversations** via GraphQL:
    ```bash
-   git branch -d <branch>
+   # Get thread IDs
+   gh api graphql -f query='{ repository(owner:"softwarecrafters-io", name:"elearning-core") { pullRequest(number:<number>) { reviewThreads(first:20) { nodes { id isResolved } } } } }'
+   
+   # Resolve each thread
+   gh api graphql -f query='mutation { resolveReviewThread(input:{threadId:"<id>"}) { thread { isResolved } } }'
    ```
 
-4. **Inform Tech Lead**: "PR merged, synced with master, ready for next task"
+5. **Commit and push**
 
+## If PR already merged
+
+```bash
+git checkout master && git pull origin master && git branch -d <branch>
+```
+
+Inform: "PR merged, synced with master, ready for next task"
