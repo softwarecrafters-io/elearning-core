@@ -16,6 +16,7 @@ describe('The GetCurrentUserUseCase', () => {
       id: user.id.value,
       email: 'test@example.com',
       name: 'Test User',
+      role: 'student',
     });
   });
 

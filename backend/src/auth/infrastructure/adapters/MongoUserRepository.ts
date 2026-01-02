@@ -2,6 +2,7 @@ import { Collection, Db } from 'mongodb';
 import { User } from '../../domain/entities/User';
 import { UserRepository } from '../../domain/repositories/UserRepository';
 import { Email } from '../../domain/value-objects/Email';
+import { UserRole } from '../../domain/value-objects/UserRole';
 import { Id } from '../../../shared/domain/value-objects/Id';
 import { Maybe } from '@app/common/src/domain/Maybe';
 
@@ -9,6 +10,7 @@ interface UserDocument {
   _id: string;
   email: string;
   name: string;
+  role: string;
 }
 
 export class MongoUserRepository implements UserRepository {
@@ -44,10 +46,16 @@ export class MongoUserRepository implements UserRepository {
       _id: primitives.id,
       email: primitives.email,
       name: primitives.name,
+      role: primitives.role,
     };
   }
 
   private toDomain(document: UserDocument): User {
-    return User.reconstitute(Id.create(document._id), Email.create(document.email), document.name);
+    return User.reconstitute(
+      Id.create(document._id),
+      Email.create(document.email),
+      document.name,
+      UserRole.create(document.role || 'student')
+    );
   }
 }

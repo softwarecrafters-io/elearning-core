@@ -16,6 +16,7 @@ describe('The UpdateUserNameUseCase', () => {
       id: user.id.value,
       email: 'test@example.com',
       name: 'New Name',
+      role: 'student',
     });
   });
 
