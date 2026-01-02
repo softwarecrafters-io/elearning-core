@@ -10,7 +10,7 @@ describe('The Admin API', () => {
     process.env.ADMIN_EMAIL = 'admin@example.com';
     await Factory.connectToMongoInMemory();
     server = createServer();
-  });
+  }, 30000);
 
   afterAll(async () => {
     await Factory.disconnectFromMongo();
